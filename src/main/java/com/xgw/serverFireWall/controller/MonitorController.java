@@ -19,12 +19,12 @@ public class MonitorController {
     @RequestMapping(value = "/test", method = RequestMethod.GET)
     @ResponseBody
     public String test(String wallet){
-        return JSON.toJSONString(monitorService.getDashboard(wallet));
+        return JSON.toJSONString(monitorService.getMinerDashboard(wallet));
     }
 
     @RequestMapping(value = "/minerWorkers", method = RequestMethod.GET)
     @ResponseBody
     public String minerWorkers(String wallet, HttpServletResponse response){
-        return JSON.toJSONString(monitorService.getDashboard(wallet));
+        return JSON.toJSONString(monitorService.getMinerDashboard(wallet));
     }
 }

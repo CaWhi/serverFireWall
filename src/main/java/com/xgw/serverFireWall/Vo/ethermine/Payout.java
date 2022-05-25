@@ -6,14 +6,29 @@ import java.math.BigInteger;
 public class Payout implements Serializable {
     private static final long serialVersionUID = 5879089677222694585L;
 
+    /**
+     * 	Unix timestamp of the payout
+     */
     private Long paidOn;
 
+    /**
+     * 	Start block of payout
+     */
     private Long start;
 
+    /**
+     * End block of payout
+     */
     private Long end;
 
+    /**
+     * 	Paid amount in base units
+     */
     private BigInteger amount;
 
+    /**
+     * 	Hash of the payout transaction
+     */
     private String txHash;
 
     public Long getPaidOn() {

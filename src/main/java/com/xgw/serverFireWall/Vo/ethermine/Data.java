@@ -6,12 +6,24 @@ import java.util.List;
 public class Data implements Serializable {
     private static final long serialVersionUID = -6044185005709602170L;
 
+    /**
+     * 	Array of the miner statistics
+     */
     private List<Statistic> statistics;
 
+    /**
+     * Workers
+     */
     private List<Worker> workers;
 
+    /**
+     * Array of the current miner statistics
+     */
     private CurrentStatistics currentStatistics;
 
+    /**
+     * Array of miner settings
+     */
     private Settings settings;
 
     public List<Statistic> getStatistics() {

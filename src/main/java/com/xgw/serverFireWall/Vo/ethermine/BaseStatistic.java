@@ -5,20 +5,44 @@ import java.io.Serializable;
 public class BaseStatistic  implements Serializable {
     private static final long serialVersionUID = 1937243682670528421L;
 
+    /**
+     * 	Unix timestamp of the statistic entry
+     */
     private Long time;
 
+    /**
+     * 	Unix timestamp of when the worker was last seen by the pool
+     */
     private Long lastSeen;
 
+    /**
+     * Reported hashrate of the miner in H/s
+     */
     private Long reportedHashrate;
 
+    /**
+     * Current hashrate of the miner in H/s
+     */
     private Long currentHashrate;
 
+    /**
+     * Average hashrate of the miner in H/s during the last 24h
+     */
     private Long averageHashrate;
 
+    /**
+     * 	Valid shares submitted by the miner
+     */
     private Integer validShares;
 
+    /**
+     * 	Inalid shares submitted by the miner
+     */
     private Integer invalidShares;
 
+    /**
+     * 	Stale shares submitted by the miner
+     */
     private Integer staleShares;
 
     public Long getTime() {

@@ -1,8 +1,7 @@
 package com.xgw.serverFireWall.service.Impl;
 
 import com.alibaba.fastjson.JSON;
-import com.xgw.serverFireWall.Vo.ethermine.Data;
-import com.xgw.serverFireWall.Vo.ethermine.Worker;
+import com.xgw.serverFireWall.Vo.ethermine.*;
 import com.xgw.serverFireWall.service.MonitorService;
 import com.xgw.serverFireWall.utils.HttpClientUtil;
 import org.apache.http.HttpResponse;
@@ -31,7 +30,77 @@ public class MonitorServiceImpl implements MonitorService {
             return result;
         }
         catch (Exception e){
-            logger.error("getDashboard error", e);
+            logger.error("getMinerDashboard error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public List<Statistic> getMinerHistory(String wallet) {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/history", baseURI, wallet), OK, true);
+            List<Statistic> result = JSON.parseArray(str, Statistic.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getMinerHistory error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public List<Payout> getMinerPayouts(String wallet) {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/payouts", baseURI, wallet), OK, true);
+            List<Payout> result = JSON.parseArray(str, Payout.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getMinerPayouts error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public List<Round> getMinerRounds(String wallet) {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/rounds", baseURI, wallet), OK, true);
+            List<Round> result = JSON.parseArray(str, Round.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getMinerRounds error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public Settings getMinerSettings(String wallet) {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/settings", baseURI, wallet), OK, true);
+            Settings result = JSON.parseObject(str, Settings.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getMinerSettings error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public CurrentStatistics getMinerCurrentStats(String wallet) {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/currentStats", baseURI, wallet), OK, true);
+            CurrentStatistics result = JSON.parseObject(str, CurrentStatistics.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getMinerCurrentStats error", e);
             return null;
         }
     }
@@ -59,7 +128,7 @@ public class MonitorServiceImpl implements MonitorService {
             return result;
         }
         catch (Exception e){
-            logger.error("getWorkers error", e);
+            logger.error("getWorkerHistory error", e);
             return null;
         }
     }
@@ -73,7 +142,7 @@ public class MonitorServiceImpl implements MonitorService {
             return result;
         }
         catch (Exception e){
-            logger.error("getWorkers error", e);
+            logger.error("getWorkerCurrentStats error", e);
             return null;
         }
     }
@@ -87,7 +156,63 @@ public class MonitorServiceImpl implements MonitorService {
             return result;
         }
         catch (Exception e){
-            logger.error("getWorkers error", e);
+            logger.error("getWorkerMonitor error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public PoolStatsData getPoolStats() {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/poolStats", baseURI), OK, true);
+            PoolStatsData result = JSON.parseObject(str, PoolStatsData.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getPoolStats error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public List<Block> getBlocksHistory() {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/blocks/history", baseURI), OK, true);
+            List<Block> result = JSON.parseArray(str, Block.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getBlocksHistory error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public NetworkStats getNetworkStats() {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/networkStats", baseURI), OK, true);
+            NetworkStats result = JSON.parseObject(str, NetworkStats.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getNetworkStats error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public List<ServerStat> getServersHistory() {
+        try{
+            String str = HttpClientUtil.get(String.format("%s/servers/history", baseURI), OK, true);
+            List<ServerStat> result = JSON.parseArray(str, ServerStat.class);
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("getServersHistory error", e);
             return null;
         }
     }
