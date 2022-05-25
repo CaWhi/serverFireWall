@@ -48,7 +48,7 @@ public class MonitorController {
     @RequestMapping(value = "/minerDashboard", method = RequestMethod.GET)
     @ResponseBody
     public String minerDashboard(String wallet){
-        return JSON.toJSONString(monitorService.getMinerDashboard(wallet));
+        return JSON.toJSONString(monitorService.getMinerDashboard(wallet).getCurrentStatistics());
     }
 
     @RequestMapping(value = "/minerHistory", method = RequestMethod.GET)

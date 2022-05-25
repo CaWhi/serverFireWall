@@ -3,16 +3,12 @@ package com.xgw.serverFireWall.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class CmdClient {
-    Logger logger = LoggerFactory.getLogger(CmdClient.class);
+    private Logger logger = LoggerFactory.getLogger(CmdClient.class);
     // 中文有乱码的可以试着改一下编码格式。
     private static final Charset charset = StandardCharsets.UTF_8;
 
@@ -34,11 +30,12 @@ public class CmdClient {
               这里启动的是sh解释器，可以根据需要改成其他shell解释器。适用mac，linux系统。
               对于windows，则是运行C:\Windows\System32\cmd.exe，同时执行的也不是shell命令，而是dos命令。
              */
-            Process process = Runtime.getRuntime().exec("/bin/sh");
+            process = Runtime.getRuntime().exec("/bin/sh");
             // 获取程序的输出流和输入流
             inputStream = process.getInputStream();
             errorStream = process.getErrorStream();
             outputStream = process.getOutputStream();
+
             /*
               输出数据需要，若执行的命令没有输出结果，就会阻塞读取流的线程。
               为了防止主线程被阻塞，所以声明新的线程专门盯着输出数据。
@@ -56,6 +53,7 @@ public class CmdClient {
     private final InputStream inputStream;
     private final InputStream errorStream;
     private final OutputStream outputStream;
+    private Process process;
 
     // 运行命令
     public void run(String cmd) {
@@ -93,26 +91,35 @@ public class CmdClient {
     /**
      * 这里直接把数据打印出来了，有其他需求的可以在这里写判来确定下一步来执行什么。
      */
-    private void print(InputStream inputStream) throws IOException {
-//        byte[] bytes = new byte[1024];
-//        int i;
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
-        String str;
-        while ((str = br.readLine()) != null)
-        {
-//            i = inputStream.read(bytes);
-//            if (i == -1) break;
-//            System.out.print(new String(bytes, 0, i, charset));
-            logger.info(str);
-            if(outHandler != null){
-                outHandler.handle(str);
+    private void print(InputStream inputStream) {
+        try(InputStreamReader isr = new InputStreamReader(inputStream);
+            BufferedReader br = new BufferedReader(isr)){
+            String str;
+            while ((str = br.readLine()) != null)
+            {
+                logger.info(str);
+                if(outHandler != null){
+                    outHandler.handle(str);
+                }
             }
         }
-//        System.out.println();
+        catch (IOException e){
+            logger.error("CmdClient 打印异常", e);
+        }
     }
 
     public interface OutHandler{
         void handle(String result);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        inputStream.close();
+        outputStream.close();
+        errorStream.close();
+        process.destroy();
+
+        super.finalize();
     }
 }
 
