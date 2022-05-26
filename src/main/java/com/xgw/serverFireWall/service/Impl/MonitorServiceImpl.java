@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.xgw.serverFireWall.Vo.ethermine.*;
 import com.xgw.serverFireWall.service.MonitorService;
 import com.xgw.serverFireWall.utils.HttpClientUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +12,11 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service("monitorService")
 public class MonitorServiceImpl implements MonitorService {
@@ -23,10 +27,135 @@ public class MonitorServiceImpl implements MonitorService {
     private static final Boolean proxy = false;
 
     private static final String OK = "OK";
+
+    private static final Map<String, Long> wallet2Time = new HashMap<>();
+
+    private static final String path = System.getProperty("user.dir") + File.separator + "data";
+
+    private static final String split = "|";
+
+    /**
+     * 十分钟
+     */
+    private static final int duration = 10*60*1000;
+
+    static {
+        try{
+            File file = new File(path);
+            if(!file.exists()){
+                file.mkdir();
+            }
+
+            file = new File(path + File.separator + "RequestTime.txt");
+
+            if(!file.exists()){
+                file.createNewFile();
+            }
+        }
+        catch (IOException e){
+            logger.error("读取请求时间异常，", e);
+        }
+
+        try(FileInputStream fis = new FileInputStream(path + File.separator + "RequestTime.txt");
+            BufferedReader br = new BufferedReader(new InputStreamReader(fis));){
+            String line = br.readLine();
+            while (line != null){
+                wallet2Time.put(StringUtils.split(line,split)[0], Long.valueOf(StringUtils.split(line,split)[1]));
+                line = br.readLine();
+            }
+        }
+        catch (IOException e){
+            logger.error("读取请求时间异常，", e);
+        }
+    }
+
+    private boolean getFromCache(String wallet){
+        if(!wallet2Time.containsKey(wallet)){
+            return false;
+        }
+
+        Long time = wallet2Time.get(wallet);
+        File file = new File(path+File.separator+wallet+".txt");
+
+        return file.exists() && (System.currentTimeMillis() - time) <= duration;
+    }
+
+    private String getCache(String wallet){
+        try(FileInputStream fis = new FileInputStream(path+File.separator+wallet+".txt");
+            BufferedReader br = new BufferedReader(new InputStreamReader(fis));){
+            String line = br.readLine();
+            StringBuilder sb = new StringBuilder();
+            while (line != null){
+                sb.append(line);
+                line = br.readLine();
+            }
+
+            return sb.toString();
+        }
+        catch (IOException e){
+            logger.error("读取请求缓存异常，", e);
+            return "";
+        }
+    }
+
+    private void setCache(String wallet, String data){
+        try{
+            File file = new File(path+File.separator+wallet+".txt");
+            if(!file.exists()){
+                file.createNewFile();
+            }
+        }
+        catch (IOException e){
+            logger.error("写入请求缓存异常，", e);
+            return;
+        }
+        try(FileOutputStream fos = new FileOutputStream(path+File.separator+wallet+".txt");
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));){
+            bw.write(data);
+            bw.flush();
+        }
+        catch (IOException e){
+            logger.error("写入请求缓存异常，", e);
+            return;
+        }
+        setRequestTime(wallet);
+    }
+
+    private void setRequestTime(String wallet){
+        wallet2Time.put(wallet, System.currentTimeMillis());
+        List<String> strs = new ArrayList<>();
+        for(Map.Entry<String, Long> entry : wallet2Time.entrySet()){
+            strs.add(entry.getKey() + split + entry.getValue().toString());
+        }
+
+        try(FileOutputStream fos = new FileOutputStream(path+File.separator+"RequestTime.txt");
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));){
+            for(String str : strs){
+                bw.write(str);
+                bw.newLine();
+            }
+            bw.flush();
+        }
+        catch (IOException e){
+            logger.error("写入请求缓存异常，", e);
+        }
+    }
+
     @Override
     public Data getMinerDashboard(String wallet) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy);
+            String str;
+            if(getFromCache(wallet)){
+                str = getCache(wallet);
+
+                if(StringUtils.isBlank(str)){
+                    str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy);
+                    setCache(wallet,str);
+                }
+            } else {
+                str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy);
+                setCache(wallet,str);
+            }
             Data result = JSON.parseObject(str, Data.class);
 
             return result;
