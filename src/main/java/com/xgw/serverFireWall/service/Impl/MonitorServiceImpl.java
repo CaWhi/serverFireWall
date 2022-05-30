@@ -22,7 +22,8 @@ import java.util.Map;
 public class MonitorServiceImpl implements MonitorService {
     private static Logger logger = LoggerFactory.getLogger(MonitorServiceImpl.class);
 
-    private static final String baseURI = "https://api.ethermine.org";
+//    private static final String baseURI = "https://api.ethermine.org";
+    private static final String baseURI = "https://funmm.top/api-server";
 
     private static final Boolean proxy = false;
 

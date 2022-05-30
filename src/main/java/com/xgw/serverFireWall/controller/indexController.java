@@ -22,9 +22,9 @@ public class indexController {
 
     static {
         ports = new ArrayList<>();
-        ports.add("5555");
-        ports.add("1199");
-        ports.add("443");
+        ports.add("5555");//e池转发
+//        ports.add("1199");//hero miner alph转发
+        ports.add("443");//space chia转发
     }
 
     @RequestMapping(value = "/test", method = RequestMethod.GET)
