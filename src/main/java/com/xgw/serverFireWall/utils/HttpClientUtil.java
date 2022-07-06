@@ -21,7 +21,7 @@ import java.security.SecureRandom;
 public class HttpClientUtil {
     private static Logger logger = LoggerFactory.getLogger(HttpClientUtil.class);
 
-    public static String get(String uri, String successCode, boolean proxy) {
+    public static String get(String uri, String successCode, boolean proxy, String statusProp, String dataProp) {
         try (CloseableHttpClient httpclient = createSSLClient()) {
             HttpResponse responseHttp = null;
             // 创建http GET请求
@@ -44,10 +44,10 @@ public class HttpClientUtil {
 
             String str = EntityUtils.toString(responseHttp.getEntity());
 
-            if (!StringUtils.equals(successCode, JSON.parseObject(str).getString("status"))) {
+            if (StringUtils.isNotBlank(statusProp) && !StringUtils.equals(successCode, JSON.parseObject(str).getString(statusProp))) {
                 return null;
             }
-            return JSON.toJSONString(JSON.parseObject(str).get("data"));
+            return StringUtils.isNotBlank(dataProp) ? JSON.toJSONString(JSON.parseObject(str).get(dataProp)) : str;
         } catch (IOException e) {
             logger.error("HttpClientUtil get error", e);
             return null;

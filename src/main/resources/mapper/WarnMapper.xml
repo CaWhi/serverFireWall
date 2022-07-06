@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xgw.serverFireWall.dao.mapper.WarnMapper">
+    <!--Student POJO映射结果集-->
+    <!--id:唯一标识-->
+    <!--type:具体的POJO对象类型-->
+    <resultMap id="Warn" type="com.xgw.serverFireWall.dao.Warn">
+        <!--column:主键字段也可以是查询语句中的别名字段-->
+        <!--property:对应POJO对象中的属性-->
+        <!--jdbcType:字段类型-->
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <id column="openid" property="openid" jdbcType="VARCHAR" />
+        <!--column:表的字段-->
+        <result column="wallet" property="wallet" jdbcType="VARCHAR" />
+        <result column="inActiveWorker" property="inActiveWorker" jdbcType="VARCHAR" />
+        <result column="dealed" property="dealed" jdbcType="BOOLEAN" />
+        <result column="createTime" property="createTime" jdbcType="DATE" />
+        <result column="updateTime" property="updateTime" jdbcType="DATE" />
+    </resultMap>
+
+    <select id="batchGetWarnUnDealed" parameterType="java.lang.String" resultMap="Warn">
+        SELECT *
+        FROM warns
+        WHERE openid = #{openid} AND wallet = #{wallet} AND dealed = false
+    </select>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO warns(id, openid, wallet, inActiveWorker, dealed, createTime, updateTime)
+        VALUES
+        <foreach collection ="warns" item="warn" separator =",">
+            (#{warn.id}, #{warn.openid}, #{warn.wallet}, #{warn.inActiveWorker}, #{warn.dealed}, #{warn.createTime}, #{warn.updateTime})
+        </foreach >
+    </insert>
+
+    <!--更新数据-->
+    <update id="batchUpdateDealed" parameterType="java.util.List">
+        <foreach collection ="warns" item="warn" separator =",">
+            UPDATE warns
+            SET dealed = #{warn.dealed},
+            updateTime  = #{warn.updateTime}
+            WHERE id = #{warn.id}
+        </foreach >
+    </update>
+
+</mapper>

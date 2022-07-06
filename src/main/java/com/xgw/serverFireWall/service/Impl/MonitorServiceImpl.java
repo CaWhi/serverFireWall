@@ -35,10 +35,14 @@ public class MonitorServiceImpl implements MonitorService {
 
     private static final String split = "|";
 
+    private static final String statusProp = "status";
+
+    private static final String dataProp = "data";
+
     /**
      * 十分钟
      */
-    private static final int duration = 10*60*1000;
+    private static final int duration = -1;
 
     static {
         try{
@@ -150,11 +154,11 @@ public class MonitorServiceImpl implements MonitorService {
                 str = getCache(wallet);
 
                 if(StringUtils.isBlank(str)){
-                    str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy);
+                    str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy, statusProp, dataProp);
                     setCache(wallet,str);
                 }
             } else {
-                str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy);
+                str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy, statusProp, dataProp);
                 setCache(wallet,str);
             }
             Data result = JSON.parseObject(str, Data.class);
@@ -170,7 +174,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<Statistic> getMinerHistory(String wallet) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/history", baseURI, wallet), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/history", baseURI, wallet), OK, proxy, statusProp, dataProp);
             List<Statistic> result = JSON.parseArray(str, Statistic.class);
 
             return result;
@@ -184,7 +188,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<Payout> getMinerPayouts(String wallet) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/payouts", baseURI, wallet), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/payouts", baseURI, wallet), OK, proxy, statusProp, dataProp);
             List<Payout> result = JSON.parseArray(str, Payout.class);
 
             return result;
@@ -198,7 +202,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<Round> getMinerRounds(String wallet) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/rounds", baseURI, wallet), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/rounds", baseURI, wallet), OK, proxy, statusProp, dataProp);
             List<Round> result = JSON.parseArray(str, Round.class);
 
             return result;
@@ -212,7 +216,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public Settings getMinerSettings(String wallet) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/settings", baseURI, wallet), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/settings", baseURI, wallet), OK, proxy, statusProp, dataProp);
             Settings result = JSON.parseObject(str, Settings.class);
 
             return result;
@@ -226,7 +230,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public CurrentStatistics getMinerCurrentStats(String wallet) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/currentStats", baseURI, wallet), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/currentStats", baseURI, wallet), OK, proxy, statusProp, dataProp);
             CurrentStatistics result = JSON.parseObject(str, CurrentStatistics.class);
 
             return result;
@@ -240,7 +244,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<Worker> getWorkers(String wallet) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/workers", baseURI, wallet), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/workers", baseURI, wallet), OK, proxy, statusProp, dataProp);
             List<Worker> result = JSON.parseArray(str, Worker.class);
 
             return result;
@@ -254,7 +258,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<Worker> getWorkerHistory(String wallet, String worker) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/worker/%s/history", baseURI, wallet, worker), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/worker/%s/history", baseURI, wallet, worker), OK, proxy, statusProp, dataProp);
             List<Worker> result = JSON.parseArray(str, Worker.class);
 
             return result;
@@ -268,7 +272,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public Worker getWorkerCurrentStats(String wallet, String worker) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/worker/%s/currentStats", baseURI, wallet, worker), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/worker/%s/currentStats", baseURI, wallet, worker), OK, proxy, statusProp, dataProp);
             Worker result = JSON.parseObject(str, Worker.class);
 
             return result;
@@ -282,7 +286,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public Worker getWorkerMonitor(String wallet, String worker) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/worker/%s/monitor", baseURI, wallet, worker), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/worker/%s/monitor", baseURI, wallet, worker), OK, proxy, statusProp, dataProp);
             Worker result = JSON.parseObject(str, Worker.class);
 
             return result;
@@ -296,7 +300,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public PoolStatsData getPoolStats() {
         try{
-            String str = HttpClientUtil.get(String.format("%s/poolStats", baseURI), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/poolStats", baseURI), OK, proxy, statusProp, dataProp);
             PoolStatsData result = JSON.parseObject(str, PoolStatsData.class);
 
             return result;
@@ -310,7 +314,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<Block> getBlocksHistory() {
         try{
-            String str = HttpClientUtil.get(String.format("%s/blocks/history", baseURI), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/blocks/history", baseURI), OK, proxy, statusProp, dataProp);
             List<Block> result = JSON.parseArray(str, Block.class);
 
             return result;
@@ -324,7 +328,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public NetworkStats getNetworkStats() {
         try{
-            String str = HttpClientUtil.get(String.format("%s/networkStats", baseURI), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/networkStats", baseURI), OK, proxy, statusProp, dataProp);
             NetworkStats result = JSON.parseObject(str, NetworkStats.class);
 
             return result;
@@ -338,7 +342,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<ServerStat> getServersHistory() {
         try{
-            String str = HttpClientUtil.get(String.format("%s/servers/history", baseURI), OK, proxy);
+            String str = HttpClientUtil.get(String.format("%s/servers/history", baseURI), OK, proxy, statusProp, dataProp);
             List<ServerStat> result = JSON.parseArray(str, ServerStat.class);
 
             return result;

@@ -25,11 +25,11 @@ public class MonitorController {
         return JSON.toJSONString(monitorService.getPoolStats());
     }
 
-    @RequestMapping(value = "/blocksHistory", method = RequestMethod.GET)
-    @ResponseBody
-    public String blocksHistory(){
-        return JSON.toJSONString(monitorService.getBlocksHistory());
-    }
+//    @RequestMapping(value = "/blocksHistory", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String blocksHistory(){
+//        return JSON.toJSONString(monitorService.getBlocksHistory());
+//    }
 
     @RequestMapping(value = "/networkStats", method = RequestMethod.GET)
     @ResponseBody
@@ -37,11 +37,11 @@ public class MonitorController {
         return JSON.toJSONString(monitorService.getNetworkStats());
     }
 
-    @RequestMapping(value = "/serversHistory", method = RequestMethod.GET)
-    @ResponseBody
-    public String serversHistory(){
-        return JSON.toJSONString(monitorService.getServersHistory());
-    }
+//    @RequestMapping(value = "/serversHistory", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String serversHistory(){
+//        return JSON.toJSONString(monitorService.getServersHistory());
+//    }
 
     @RequestMapping(value = "/minerDashboard", method = RequestMethod.GET)
     @ResponseBody
@@ -49,23 +49,23 @@ public class MonitorController {
         return JSON.toJSONString(monitorService.getMinerDashboard(wallet));
     }
 
-    @RequestMapping(value = "/minerHistory", method = RequestMethod.GET)
-    @ResponseBody
-    public String minerHistory(String wallet){
-        return JSON.toJSONString(monitorService.getMinerHistory(wallet));
-    }
+//    @RequestMapping(value = "/minerHistory", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String minerHistory(String wallet){
+//        return JSON.toJSONString(monitorService.getMinerHistory(wallet));
+//    }
 
-    @RequestMapping(value = "/minerPayouts", method = RequestMethod.GET)
-    @ResponseBody
-    public String minerPayouts(String wallet){
-        return JSON.toJSONString(monitorService.getMinerPayouts(wallet));
-    }
-
-    @RequestMapping(value = "/minerRounds", method = RequestMethod.GET)
-    @ResponseBody
-    public String minerRounds(String wallet){
-        return JSON.toJSONString(monitorService.getMinerRounds(wallet));
-    }
+//    @RequestMapping(value = "/minerPayouts", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String minerPayouts(String wallet){
+//        return JSON.toJSONString(monitorService.getMinerPayouts(wallet));
+//    }
+//
+//    @RequestMapping(value = "/minerRounds", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String minerRounds(String wallet){
+//        return JSON.toJSONString(monitorService.getMinerRounds(wallet));
+//    }
 
     @RequestMapping(value = "/minerSettings", method = RequestMethod.GET)
     @ResponseBody
@@ -79,27 +79,27 @@ public class MonitorController {
         return JSON.toJSONString(monitorService.getMinerCurrentStats(wallet));
     }
 
-    @RequestMapping(value = "/minerWorkers", method = RequestMethod.GET)
-    @ResponseBody
-    public String minerWorkers(String wallet){
-        return JSON.toJSONString(monitorService.getWorkers(wallet));
-    }
+//    @RequestMapping(value = "/minerWorkers", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String minerWorkers(String wallet){
+//        return JSON.toJSONString(monitorService.getWorkers(wallet));
+//    }
 
-    @RequestMapping(value = "/minerWorkerHistory", method = RequestMethod.GET)
-    @ResponseBody
-    public String minerWorkerHistory(String wallet, String worker){
-        return JSON.toJSONString(monitorService.getWorkerHistory(wallet,worker));
-    }
+//    @RequestMapping(value = "/minerWorkerHistory", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String minerWorkerHistory(String wallet, String worker){
+//        return JSON.toJSONString(monitorService.getWorkerHistory(wallet,worker));
+//    }
 
-    @RequestMapping(value = "/minerWorkerCurrentStats", method = RequestMethod.GET)
-    @ResponseBody
-    public String minerWorkerCurrentStats(String wallet, String worker){
-        return JSON.toJSONString(monitorService.getWorkerCurrentStats(wallet,worker));
-    }
-
-    @RequestMapping(value = "/minerWorkerMonitor", method = RequestMethod.GET)
-    @ResponseBody
-    public String minerWorkerMonitor(String wallet, String worker){
-        return JSON.toJSONString(monitorService.getWorkerMonitor(wallet,worker));
-    }
+//    @RequestMapping(value = "/minerWorkerCurrentStats", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String minerWorkerCurrentStats(String wallet, String worker){
+//        return JSON.toJSONString(monitorService.getWorkerCurrentStats(wallet,worker));
+//    }
+//
+//    @RequestMapping(value = "/minerWorkerMonitor", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String minerWorkerMonitor(String wallet, String worker){
+//        return JSON.toJSONString(monitorService.getWorkerMonitor(wallet,worker));
+//    }
 }
