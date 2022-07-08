@@ -26,8 +26,6 @@ import java.util.*;
 public class InActiveWarnServiceImpl implements InActiveWarnService {
     private static Logger logger = LoggerFactory.getLogger(InActiveWarnServiceImpl.class);
 
-    private static final String LOGIN_URL = "https://api.weixin.qq.com/sns/jscode2session?appid=wx1c4e008cbe2d3846&secret=9f09b7dc70383df555813642091bb6f4&js_code=%s&grant_type=authorization_code";
-
     private static final int inactiveTime = 900;
 
     @Resource
