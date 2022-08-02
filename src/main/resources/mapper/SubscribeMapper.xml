@@ -50,4 +50,10 @@
         WHERE openid = #{openid}
     </update>
 
+    <select id="getRecent" parameterType="java.util.Date" resultMap="Subscribe">
+        SELECT *
+        FROM subscribes
+        WHERE updateTime &gt;= #{last} OR createTime &gt;= #{last}
+    </select>
+
 </mapper>

@@ -19,9 +19,39 @@ public class InActiveWarnController {
     @Resource
     InActiveWarnService inActiveWarnService;
 
+    /**
+     * 开启掉线提醒
+     * @param loginCode
+     * @param wallet
+     * @return
+     */
     @RequestMapping(value = "/openInActiveWarn", method = RequestMethod.GET)
     @ResponseBody
     public String openInActiveWarn(String loginCode, String wallet){
         return JSON.toJSONString(inActiveWarnService.openInActiveWarn(loginCode, wallet));
+    }
+
+    /**
+     * 更新用户钱包
+     * @param loginCode
+     * @param wallet
+     * @return
+     */
+    @RequestMapping(value = "/updateWallet", method = RequestMethod.GET)
+    @ResponseBody
+    public String updateWallet(String loginCode, String wallet){
+        return JSON.toJSONString(inActiveWarnService.updateWallet(loginCode, wallet));
+    }
+
+    /**
+     * 获取用户历史收益
+     * @param loginCode
+     * @param wallet
+     * @return
+     */
+    @RequestMapping(value = "/getProfits", method = RequestMethod.GET)
+    @ResponseBody
+    public String getProfits(String loginCode, String wallet, Integer pageIndex){
+        return JSON.toJSONString(inActiveWarnService.getProfits(loginCode, wallet, pageIndex, 25));
     }
 }

@@ -2,28 +2,28 @@ package com.xgw.serverFireWall.dao;
 
 import java.util.Date;
 
-public class Warn {
-    private String id;
+public class Profit {
+    private Integer id;
 
     private String openid;
 
     private String wallet;
 
-    private String inActiveWorker;
+    private Double currentUnpaid;
 
-    private Date LastSeen;
+    private Double lastDayProfit;
 
-    private Boolean dealed;
+    private Date profitTime;
 
     private Date createTime;
 
     private Date updateTime;
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -43,28 +43,20 @@ public class Warn {
         this.wallet = wallet;
     }
 
-    public String getInActiveWorker() {
-        return inActiveWorker;
+    public Double getCurrentUnpaid() {
+        return currentUnpaid;
     }
 
-    public void setInActiveWorker(String inActiveWorker) {
-        this.inActiveWorker = inActiveWorker;
+    public void setCurrentUnpaid(Double currentUnpaid) {
+        this.currentUnpaid = currentUnpaid;
     }
 
-    public Boolean getDealed() {
-        return dealed;
+    public Double getLastDayProfit() {
+        return lastDayProfit;
     }
 
-    public void setDealed(Boolean dealed) {
-        this.dealed = dealed;
-    }
-
-    public Date getLastSeen() {
-        return LastSeen;
-    }
-
-    public void setLastSeen(Date lastSeen) {
-        LastSeen = lastSeen;
+    public void setLastDayProfit(Double lastDayProfit) {
+        this.lastDayProfit = lastDayProfit;
     }
 
     public Date getCreateTime() {
@@ -81,5 +73,13 @@ public class Warn {
 
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public Date getProfitTime() {
+        return profitTime;
+    }
+
+    public void setProfitTime(Date profitTime) {
+        this.profitTime = profitTime;
     }
 }

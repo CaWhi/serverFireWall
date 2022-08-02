@@ -13,6 +13,7 @@
         <!--column:表的字段-->
         <result column="wallet" property="wallet" jdbcType="VARCHAR" />
         <result column="inActiveWorker" property="inActiveWorker" jdbcType="VARCHAR" />
+        <result column="lastSeen" property="lastSeen" jdbcType="DATE" />
         <result column="dealed" property="dealed" jdbcType="BOOLEAN" />
         <result column="createTime" property="createTime" jdbcType="DATE" />
         <result column="updateTime" property="updateTime" jdbcType="DATE" />
@@ -25,10 +26,10 @@
     </select>
 
     <insert id="batchInsert" parameterType="java.util.List">
-        INSERT INTO warns(id, openid, wallet, inActiveWorker, dealed, createTime, updateTime)
+        INSERT INTO warns(id, openid, wallet, inActiveWorker, lastSeen, dealed, createTime, updateTime)
         VALUES
         <foreach collection ="warns" item="warn" separator =",">
-            (#{warn.id}, #{warn.openid}, #{warn.wallet}, #{warn.inActiveWorker}, #{warn.dealed}, #{warn.createTime}, #{warn.updateTime})
+            (#{warn.id}, #{warn.openid}, #{warn.wallet}, #{warn.inActiveWorker}, #{warn.lastSeen}, #{warn.dealed}, #{warn.createTime}, #{warn.updateTime})
         </foreach >
     </insert>
 
