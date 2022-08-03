@@ -11,7 +11,7 @@ public interface ProfitMapper {
     List<Profit> getLastProfit(@Param("openids") List<String> openids, @Param("wallets") List<String> wallets);
 
     List<Profit> getUserLastProfit(@Param("openid") String openid, @Param("wallet") String wallet,
-                                   @Param("pageIndex") Integer pageIndex, @Param("pageSize") Integer pageSize);
+                                   @Param("offset") Integer offset, @Param("pageSize") Integer pageSize);
 
     void batchInsert(List<Profit> profits);
 }

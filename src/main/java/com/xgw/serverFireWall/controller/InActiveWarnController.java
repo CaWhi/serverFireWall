@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 @Controller()
 @RequestMapping("/inactive")
@@ -21,37 +22,41 @@ public class InActiveWarnController {
 
     /**
      * 开启掉线提醒
-     * @param loginCode
      * @param wallet
      * @return
      */
     @RequestMapping(value = "/openInActiveWarn", method = RequestMethod.GET)
     @ResponseBody
-    public String openInActiveWarn(String loginCode, String wallet){
-        return JSON.toJSONString(inActiveWarnService.openInActiveWarn(loginCode, wallet));
+    public String openInActiveWarn(HttpServletRequest request, String wallet){
+        return inActiveWarnService.openInActiveWarn(request.getHeader("x-wx-openid"), wallet).toString();
     }
 
     /**
      * 更新用户钱包
-     * @param loginCode
      * @param wallet
      * @return
      */
     @RequestMapping(value = "/updateWallet", method = RequestMethod.GET)
     @ResponseBody
-    public String updateWallet(String loginCode, String wallet){
-        return JSON.toJSONString(inActiveWarnService.updateWallet(loginCode, wallet));
+    public String updateWallet(HttpServletRequest request, String wallet){
+        return inActiveWarnService.updateWallet(request.getHeader("x-wx-openid"), wallet).toString();
     }
 
     /**
      * 获取用户历史收益
-     * @param loginCode
      * @param wallet
      * @return
      */
     @RequestMapping(value = "/getProfits", method = RequestMethod.GET)
     @ResponseBody
-    public String getProfits(String loginCode, String wallet, Integer pageIndex){
-        return JSON.toJSONString(inActiveWarnService.getProfits(loginCode, wallet, pageIndex, 25));
+    public String getProfits(HttpServletRequest request, String wallet, Integer pageIndex){
+        return JSON.toJSONString(inActiveWarnService.getProfits(request.getHeader("x-wx-openid"), wallet, pageIndex, 25));
     }
+
+//    @RequestMapping(value = "/test", method = RequestMethod.GET)
+//    @ResponseBody
+//    public String test(HttpServletRequest request){
+////        String uri = "https://api.weixin.qq.com/cgi-bin/token?appid=wx1c4e008cbe2d3846&secret=9f09b7dc70383df555813642091bb6f4&grant_type=client_credential";
+//        return request.getHeader("x-wx-openid");
+//    }
 }

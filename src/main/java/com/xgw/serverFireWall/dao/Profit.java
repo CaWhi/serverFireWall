@@ -11,6 +11,10 @@ public class Profit {
 
     private Double currentUnpaid;
 
+    private Double reportHashRate;
+
+    private Double averageHashRate;
+
     private Double lastDayProfit;
 
     private Date profitTime;
@@ -81,5 +85,21 @@ public class Profit {
 
     public void setProfitTime(Date profitTime) {
         this.profitTime = profitTime;
+    }
+
+    public Double getReportHashRate() {
+        return reportHashRate;
+    }
+
+    public void setReportHashRate(Double reportHashRate) {
+        this.reportHashRate = reportHashRate;
+    }
+
+    public Double getAverageHashRate() {
+        return averageHashRate;
+    }
+
+    public void setAverageHashRate(Double averageHashRate) {
+        this.averageHashRate = averageHashRate;
     }
 }

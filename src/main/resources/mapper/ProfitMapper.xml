@@ -13,6 +13,8 @@
         <!--column:表的字段-->
         <result column="wallet" property="wallet" jdbcType="VARCHAR" />
         <result column="currentUnpaid" property="currentUnpaid" jdbcType="DOUBLE" />
+        <result column="reportHashRate" property="reportHashRate" jdbcType="DOUBLE" />
+        <result column="averageHashRate" property="averageHashRate" jdbcType="DOUBLE" />
         <result column="lastDayProfit" property="lastDayProfit" jdbcType="DOUBLE" />
         <result column="profitTime" property="profitTime" jdbcType="DATE" />
         <result column="createTime" property="createTime" jdbcType="DATE" />
@@ -25,6 +27,8 @@
         r.openid as openid,
         ANY_VALUE(r.wallet) as wallet,
         ANY_VALUE(r.currentUnpaid) as currentUnpaid,
+        ANY_VALUE(r.reportHashRate) as reportHashRate,
+        ANY_VALUE(r.averageHashRate) as averageHashRate,
         ANY_VALUE(r.lastDayProfit) as lastDayProfit,
         ANY_VALUE(r.profitTime) as profitTime,
         ANY_VALUE(r.createTime) as createTime,
@@ -47,20 +51,20 @@
           openid
     </select>
 
-    <select id="getUserLastProfit" resultMap="Subscribe">
+    <select id="getUserLastProfit" resultMap="Profit">
         SELECT *
         FROM profits
         WHERE openid = #{openid} AND wallet = #{wallet}
         ORDER BY
                 profitTime DESC
-        LIMIT #{pageSize} OFFSET #{pageSize} * #{pageIndex}
+        LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <insert id="batchInsert" parameterType="java.util.List">
-        INSERT INTO profits(id, openid, wallet, currentUnpaid, lastDayProfit, profitTime, createTime, updateTime)
+        INSERT INTO profits(id, openid, wallet, currentUnpaid, reportHashRate, averageHashRate, lastDayProfit, profitTime, createTime, updateTime)
         VALUES
         <foreach collection ="profits" item="profit" separator =",">
-            (#{profit.id}, #{profit.openid}, #{profit.wallet}, #{profit.currentUnpaid}, #{profit.lastDayProfit}, #{profit.profitTime}, #{profit.createTime}, #{profit.updateTime})
+            (#{profit.id}, #{profit.openid}, #{profit.wallet}, #{profit.currentUnpaid}, #{profit.reportHashRate}, #{profit.averageHashRate}, #{profit.lastDayProfit}, #{profit.profitTime}, #{profit.createTime}, #{profit.updateTime})
         </foreach >
     </insert>
 
