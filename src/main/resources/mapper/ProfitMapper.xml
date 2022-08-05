@@ -16,9 +16,9 @@
         <result column="reportHashRate" property="reportHashRate" jdbcType="DOUBLE" />
         <result column="averageHashRate" property="averageHashRate" jdbcType="DOUBLE" />
         <result column="lastDayProfit" property="lastDayProfit" jdbcType="DOUBLE" />
-        <result column="profitTime" property="profitTime" jdbcType="DATE" />
-        <result column="createTime" property="createTime" jdbcType="DATE" />
-        <result column="updateTime" property="updateTime" jdbcType="DATE" />
+        <result column="profitTime" property="profitTime" jdbcType="TIMESTAMP" />
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP" />
     </resultMap>
 
     <select id="getLastProfit" resultMap="Profit">

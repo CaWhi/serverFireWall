@@ -32,7 +32,7 @@ import java.util.*;
 public class InActiveWarnServiceImpl implements InActiveWarnService {
     private static Logger logger = LoggerFactory.getLogger(InActiveWarnServiceImpl.class);
 
-    private static final int inactiveTime = 900;
+    private static final int inactiveTime = 1200;
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -138,7 +138,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                 pageSize = 25;
             }
 
-            return profitMapper.getUserLastProfit(openid, wallet, pageIndex*pageSize, pageSize);
+            return profitMapper.getUserLastProfit(openid, StringUtils.lowerCase(wallet), pageIndex*pageSize, pageSize);
         }
         catch (Exception e){
             logger.error("获取历史收益失败，wallet:{}", wallet, e);
@@ -170,7 +170,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
             Set<String> walletSet = new HashSet<>();
             for(Subscribe subscribe : subscribes){
                 openidSet.add(subscribe.getOpenid());
-                walletSet.add(subscribe.getWallet());
+                walletSet.add(StringUtils.lowerCase(subscribe.getWallet()));
             }
             List<Profit> lastProfits = profitMapper.getLastProfit(new ArrayList<>(openidSet), new ArrayList<>(walletSet));
             Map<String, Profit> openidWalletProfit = new HashMap<>();
@@ -184,8 +184,8 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
 
             List<Profit> profitList = new ArrayList<>();
             //遍历计算昨天收益
-            Calendar now = Calendar.getInstance();
             for(Subscribe subscribe : subscribes){
+                Calendar now = Calendar.getInstance();
                 String openid = subscribe.getOpenid();
                 String wallet = subscribe.getWallet();
                 CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet);
@@ -195,16 +195,19 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                     currentStatistics.setReportedHashrate(0l);
                     currentStatistics.setAverageHashrate(0l);
                 }
+                if(currentStatistics.getUnpaid() == null){
+                    currentStatistics.setUnpaid(new BigInteger("0"));
+                }
                 Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid());
                 Double reportHashRate = Double.valueOf(currentStatistics.getReportedHashrate()) / 1000000;
                 Double averageHashrate = Double.valueOf(currentStatistics.getAverageHashrate()) / 1000000;
 
-                Double lastUnpaid = getLastUnpaid(openidWalletProfit.get(openid+wallet), profitDate);
+                Double lastUnpaid = getLastUnpaid(openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), profitDate);
                 Profit profit = new Profit();
                 //之前没有收益记录，第一天不计算收益
                 if(lastUnpaid == null){
                     profit.setOpenid(openid);
-                    profit.setWallet(wallet);
+                    profit.setWallet(StringUtils.lowerCase(wallet));
                     profit.setCurrentUnpaid(currentUnpaid);
                     profit.setReportHashRate(reportHashRate);
                     profit.setAverageHashRate(averageHashrate);
@@ -217,7 +220,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                     Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
 
                     profit.setOpenid(openid);
-                    profit.setWallet(wallet);
+                    profit.setWallet(StringUtils.lowerCase(wallet));
                     profit.setCurrentUnpaid(currentUnpaid);
                     profit.setReportHashRate(reportHashRate);
                     profit.setAverageHashRate(averageHashrate);
@@ -227,6 +230,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                 }
                 profitList.add(profit);
                 logger.info("计算余额，openid:{},wallet:{},currentUnpaid:{},lastDayProfit:{}", openid, wallet, currentUnpaid, profit.getLastDayProfit());
+                Thread.sleep(1000);
             }
 
             profitMapper.batchInsert(profitList);

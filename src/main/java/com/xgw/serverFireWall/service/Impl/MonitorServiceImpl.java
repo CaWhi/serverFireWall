@@ -229,14 +229,16 @@ public class MonitorServiceImpl implements MonitorService {
 
     @Override
     public CurrentStatistics getMinerCurrentStats(String wallet) {
+        String str="";
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/currentStats", baseURI, wallet), OK, proxy, statusProp, dataProp);
+            str = HttpClientUtil.get(String.format("%s/miner/%s/currentStats", baseURI, wallet), OK, proxy, statusProp, dataProp);
             CurrentStatistics result = JSON.parseObject(str, CurrentStatistics.class);
 
             return result;
         }
         catch (Exception e){
             logger.error("getMinerCurrentStats error", e);
+            logger.info("wallet:{},str:{}",wallet,str);
             return null;
         }
     }

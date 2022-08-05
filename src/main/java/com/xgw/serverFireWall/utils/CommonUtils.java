@@ -13,6 +13,9 @@ public class CommonUtils {
      * @return
      */
     public static Double dealCoinAmount(BigInteger amount){
+        if(amount==null){
+            amount = new BigInteger("0");
+        }
         BigDecimal amountD = new BigDecimal(amount);
 
         return amountD.divide(baseUnit, 5, RoundingMode.HALF_UP).doubleValue();

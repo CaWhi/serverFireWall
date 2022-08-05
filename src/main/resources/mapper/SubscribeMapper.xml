@@ -11,9 +11,9 @@
         <id column="openid" property="openid" jdbcType="VARCHAR" />
         <!--column:表的字段-->
         <result column="wallet" property="wallet" jdbcType="VARCHAR" />
-        <result column="expireTime" property="expireTime" jdbcType="DATE" />
-        <result column="createTime" property="createTime" jdbcType="DATE" />
-        <result column="updateTime" property="updateTime" jdbcType="DATE" />
+        <result column="expireTime" property="expireTime" jdbcType="TIMESTAMP" />
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP" />
     </resultMap>
 
     <select id="getByOpenIdWallet" parameterType="java.lang.String" resultMap="Subscribe">
@@ -54,6 +54,7 @@
         SELECT *
         FROM subscribes
         WHERE updateTime &gt;= #{last} OR createTime &gt;= #{last}
+        ORDER BY updateTime DESC,createTime DESC
     </select>
 
 </mapper>

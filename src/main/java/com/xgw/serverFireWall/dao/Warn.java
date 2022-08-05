@@ -1,5 +1,7 @@
 package com.xgw.serverFireWall.dao;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.util.Date;
 
 public class Warn {
@@ -11,12 +13,15 @@ public class Warn {
 
     private String inActiveWorker;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh",timezone = "GMT+8")
     private Date LastSeen;
 
     private Boolean dealed;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh",timezone = "GMT+8")
     private Date createTime;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh",timezone = "GMT+8")
     private Date updateTime;
 
     public String getId() {

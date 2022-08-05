@@ -13,10 +13,10 @@
         <!--column:表的字段-->
         <result column="wallet" property="wallet" jdbcType="VARCHAR" />
         <result column="inActiveWorker" property="inActiveWorker" jdbcType="VARCHAR" />
-        <result column="lastSeen" property="lastSeen" jdbcType="DATE" />
+        <result column="lastSeen" property="lastSeen" jdbcType="TIMESTAMP" />
         <result column="dealed" property="dealed" jdbcType="BOOLEAN" />
-        <result column="createTime" property="createTime" jdbcType="DATE" />
-        <result column="updateTime" property="updateTime" jdbcType="DATE" />
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP" />
     </resultMap>
 
     <select id="batchGetWarnUnDealed" parameterType="java.lang.String" resultMap="Warn">

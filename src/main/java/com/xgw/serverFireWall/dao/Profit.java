@@ -1,5 +1,7 @@
 package com.xgw.serverFireWall.dao;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.util.Date;
 
 public class Profit {
@@ -17,10 +19,13 @@ public class Profit {
 
     private Double lastDayProfit;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh",timezone = "GMT+8")
     private Date profitTime;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh",timezone = "GMT+8")
     private Date createTime;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh",timezone = "GMT+8")
     private Date updateTime;
 
     public Integer getId() {
