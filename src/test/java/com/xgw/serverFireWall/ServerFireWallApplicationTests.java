@@ -20,7 +20,7 @@ class ServerFireWallApplicationTests {
 	void contextLoads() {
 //		try{
 //			for(int i=0;i<1;i++){
-//				inActiveWarnService.profitTaskExecute();
+				inActiveWarnService.profitTaskExecute();
 //			}
 //		}
 //		catch (Exception e){

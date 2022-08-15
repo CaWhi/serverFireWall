@@ -159,81 +159,94 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
             Calendar recent = Calendar.getInstance();
             recent.add(Calendar.DATE, -7);
             //获取7天内活跃账号
-            List<Subscribe> subscribes = subscribeMapper.getRecent(recent.getTime());
-            if(CollectionUtils.isEmpty(subscribes)){
+            List<Subscribe> allSubscribe = subscribeMapper.getRecent(recent.getTime());
+            if(CollectionUtils.isEmpty(allSubscribe)){
                 logger.info("{},没有账户需要计算收益", LocalDateTime.now());
                 return;
             }
 
-            //获取最新的收益记录
-            Set<String> openidSet = new HashSet<>();
-            Set<String> walletSet = new HashSet<>();
-            for(Subscribe subscribe : subscribes){
-                openidSet.add(subscribe.getOpenid());
-                walletSet.add(StringUtils.lowerCase(subscribe.getWallet()));
-            }
-            List<Profit> lastProfits = profitMapper.getLastProfit(new ArrayList<>(openidSet), new ArrayList<>(walletSet));
-            Map<String, Profit> openidWalletProfit = new HashMap<>();
-            for(Profit profit : lastProfits){
-                openidWalletProfit.put(profit.getOpenid()+profit.getWallet(), profit);
-            }
+            // 分页
+            List<List<Subscribe>> subscribePages = CommonUtils.pageList(allSubscribe, 50);
 
+            // 收益日期
             Calendar last = Calendar.getInstance();
             last.add(Calendar.DATE, -1);
             String profitDate = sdf.format(last.getTime());
 
-            List<Profit> profitList = new ArrayList<>();
-            //遍历计算昨天收益
-            for(Subscribe subscribe : subscribes){
-                Calendar now = Calendar.getInstance();
-                String openid = subscribe.getOpenid();
-                String wallet = subscribe.getWallet();
-                CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet);
-                if(currentStatistics == null){
-                    currentStatistics = new CurrentStatistics();
-                    currentStatistics.setUnpaid(new BigInteger("0"));
-                    currentStatistics.setReportedHashrate(0l);
-                    currentStatistics.setAverageHashrate(0l);
-                }
-                if(currentStatistics.getUnpaid() == null){
-                    currentStatistics.setUnpaid(new BigInteger("0"));
-                }
-                Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid());
-                Double reportHashRate = Double.valueOf(currentStatistics.getReportedHashrate()) / 1000000;
-                Double averageHashrate = Double.valueOf(currentStatistics.getAverageHashrate()) / 1000000;
+            // 分批计算收益
+            for(List<Subscribe> subscribes : subscribePages){
+                try{
+                    //获取最新的收益记录
+                    Set<String> openidSet = new HashSet<>();
+                    Set<String> walletSet = new HashSet<>();
+                    for(Subscribe subscribe : subscribes){
+                        openidSet.add(subscribe.getOpenid());
+                        walletSet.add(StringUtils.lowerCase(subscribe.getWallet()));
+                    }
+                    List<Profit> lastProfits = profitMapper.getLastProfit(new ArrayList<>(openidSet), new ArrayList<>(walletSet));
+                    Map<String, Profit> openidWalletProfit = new HashMap<>();
+                    for(Profit profit : lastProfits){
+                        openidWalletProfit.put(profit.getOpenid()+profit.getWallet(), profit);
+                    }
 
-                Double lastUnpaid = getLastUnpaid(openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), profitDate);
-                Profit profit = new Profit();
-                //之前没有收益记录，第一天不计算收益
-                if(lastUnpaid == null){
-                    profit.setOpenid(openid);
-                    profit.setWallet(StringUtils.lowerCase(wallet));
-                    profit.setCurrentUnpaid(currentUnpaid);
-                    profit.setReportHashRate(reportHashRate);
-                    profit.setAverageHashRate(averageHashrate);
-                    profit.setProfitTime(last.getTime());
-                    profit.setCreateTime(now.getTime());
-                } else {
-                    //计算昨天收益
-                    BigInteger lastPaid = getLastPaid(wallet, profitDate);
-                    //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
-                    Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
+                    List<Profit> profitList = new ArrayList<>();
+                    //遍历计算昨天收益
+                    for(Subscribe subscribe : subscribes){
+                        Calendar now = Calendar.getInstance();
+                        String openid = subscribe.getOpenid();
+                        String wallet = subscribe.getWallet();
+                        CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet);
+                        if(currentStatistics == null){
+                            currentStatistics = new CurrentStatistics();
+                            currentStatistics.setUnpaid(new BigInteger("0"));
+                            currentStatistics.setReportedHashrate(0l);
+                            currentStatistics.setAverageHashrate(0l);
+                        }
+                        if(currentStatistics.getUnpaid() == null){
+                            currentStatistics.setUnpaid(new BigInteger("0"));
+                        }
+                        Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid());
+                        Double reportHashRate = Double.valueOf(currentStatistics.getReportedHashrate()) / 1000000;
+                        Double averageHashrate = Double.valueOf(currentStatistics.getAverageHashrate()) / 1000000;
 
-                    profit.setOpenid(openid);
-                    profit.setWallet(StringUtils.lowerCase(wallet));
-                    profit.setCurrentUnpaid(currentUnpaid);
-                    profit.setReportHashRate(reportHashRate);
-                    profit.setAverageHashRate(averageHashrate);
-                    profit.setLastDayProfit(lastDayProfit);
-                    profit.setProfitTime(last.getTime());
-                    profit.setCreateTime(now.getTime());
+                        Double lastUnpaid = getLastUnpaid(openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), profitDate);
+                        Profit profit = new Profit();
+                        //之前没有收益记录，第一天不计算收益
+                        if(lastUnpaid == null){
+                            profit.setOpenid(openid);
+                            profit.setWallet(StringUtils.lowerCase(wallet));
+                            profit.setCurrentUnpaid(currentUnpaid);
+                            profit.setReportHashRate(reportHashRate);
+                            profit.setAverageHashRate(averageHashrate);
+                            profit.setProfitTime(last.getTime());
+                            profit.setCreateTime(now.getTime());
+                        } else {
+                            //计算昨天收益
+                            BigInteger lastPaid = getLastPaid(wallet, profitDate);
+                            //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
+                            //todo 可能存在精度问题
+                            Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
+
+                            profit.setOpenid(openid);
+                            profit.setWallet(StringUtils.lowerCase(wallet));
+                            profit.setCurrentUnpaid(currentUnpaid);
+                            profit.setReportHashRate(reportHashRate);
+                            profit.setAverageHashRate(averageHashrate);
+                            profit.setLastDayProfit(lastDayProfit);
+                            profit.setProfitTime(last.getTime());
+                            profit.setCreateTime(now.getTime());
+                        }
+                        profitList.add(profit);
+                        logger.info("计算余额，openid:{},wallet:{},currentUnpaid:{},lastDayProfit:{}", openid, wallet, currentUnpaid, profit.getLastDayProfit());
+                        Thread.sleep(1000);
+                    }
+
+                    profitMapper.batchInsert(profitList);
                 }
-                profitList.add(profit);
-                logger.info("计算余额，openid:{},wallet:{},currentUnpaid:{},lastDayProfit:{}", openid, wallet, currentUnpaid, profit.getLastDayProfit());
-                Thread.sleep(1000);
+                catch (Exception e){
+                    logger.error("每日收益分批计算失败", e);
+                }
             }
-
-            profitMapper.batchInsert(profitList);
         }
         catch (Exception e){
             logger.error("每日计算收益失败", e);
