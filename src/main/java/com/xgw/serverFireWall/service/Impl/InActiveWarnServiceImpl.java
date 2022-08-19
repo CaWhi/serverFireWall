@@ -60,6 +60,12 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
     @Resource
     private SqlSessionTemplate sqlSessionTemplate;
 
+//    @Resource
+//    private AsyncProfitService asyncProfitService;
+//
+//    @Resource
+//    private AsyncInActiveWarnService asyncInActiveWarnService;
+
     @Override
     public Boolean openInActiveWarn(String openid, String wallet) {
         try{
@@ -119,7 +125,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                 if(StringUtils.isNotBlank(email)){
                     subscribe.setEmail(email);
                 }
-                if(threshold != null && threshold > 0 && threshold <= 100){
+                if(threshold > 0 && threshold <= 100){
                     subscribe.setThreshold(threshold);
                 }
 
@@ -214,60 +220,65 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                     List<Profit> profitList = new ArrayList<>();
                     //遍历计算昨天收益
                     for(Subscribe subscribe : subscribes){
-                        if(StringUtils.isBlank(subscribe.getWallet())){
-                            continue;
-                        }
-
-                        Calendar now = Calendar.getInstance();
                         String openid = subscribe.getOpenid();
                         String wallet = subscribe.getWallet();
-                        CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet);
-                        if(currentStatistics == null){
-                            currentStatistics = new CurrentStatistics();
-                            currentStatistics.setUnpaid(new BigInteger("0"));
-                            currentStatistics.setReportedHashrate(0l);
-                            currentStatistics.setAverageHashrate(0l);
-                        }
-                        if(currentStatistics.getUnpaid() == null){
-                            currentStatistics.setUnpaid(new BigInteger("0"));
-                        }
-                        Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid());
-                        Double reportHashRate = Double.valueOf(currentStatistics.getReportedHashrate()) / 1000000;
-                        Double averageHashrate = Double.valueOf(currentStatistics.getAverageHashrate()) / 1000000;
-
-                        Double lastUnpaid = getLastUnpaid(openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), profitDate);
-                        Profit profit = new Profit();
-                        //之前没有收益记录，第一天不计算收益
-                        if(lastUnpaid == null){
-                            profit.setOpenid(openid);
-                            profit.setWallet(StringUtils.lowerCase(wallet));
-                            profit.setCurrentUnpaid(currentUnpaid);
-                            profit.setReportHashRate(reportHashRate);
-                            profit.setAverageHashRate(averageHashrate);
-                            profit.setProfitTime(last.getTime());
-                            profit.setCreateTime(now.getTime());
-                        } else {
-                            //计算昨天收益
-                            BigInteger lastPaid = getLastPaid(wallet, profitDate);
-                            //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
-                            //todo 可能存在精度问题
-                            Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
-                            if(lastDayProfit < 0){
-                                lastDayProfit = 0d;
+                        try{
+                            if(StringUtils.isBlank(subscribe.getWallet())){
+                                continue;
                             }
 
-                            profit.setOpenid(openid);
-                            profit.setWallet(StringUtils.lowerCase(wallet));
-                            profit.setCurrentUnpaid(currentUnpaid);
-                            profit.setReportHashRate(reportHashRate);
-                            profit.setAverageHashRate(averageHashrate);
-                            profit.setLastDayProfit(lastDayProfit);
-                            profit.setProfitTime(last.getTime());
-                            profit.setCreateTime(now.getTime());
+                            Calendar now = Calendar.getInstance();
+                            CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet);
+                            if(currentStatistics == null){
+                                currentStatistics = new CurrentStatistics();
+                                currentStatistics.setUnpaid(new BigInteger("0"));
+                                currentStatistics.setReportedHashrate(0l);
+                                currentStatistics.setAverageHashrate(0l);
+                            }
+                            if(currentStatistics.getUnpaid() == null){
+                                currentStatistics.setUnpaid(new BigInteger("0"));
+                            }
+                            Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid());
+                            Double reportHashRate = Double.valueOf(currentStatistics.getReportedHashrate()) / 1000000;
+                            Double averageHashrate = Double.valueOf(currentStatistics.getAverageHashrate()) / 1000000;
+
+                            Double lastUnpaid = getLastUnpaid(openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), profitDate);
+                            Profit profit = new Profit();
+                            //之前没有收益记录，第一天不计算收益
+                            if(lastUnpaid == null){
+                                profit.setOpenid(openid);
+                                profit.setWallet(StringUtils.lowerCase(wallet));
+                                profit.setCurrentUnpaid(currentUnpaid);
+                                profit.setReportHashRate(reportHashRate);
+                                profit.setAverageHashRate(averageHashrate);
+                                profit.setProfitTime(last.getTime());
+                                profit.setCreateTime(now.getTime());
+                            } else {
+                                //计算昨天收益
+                                BigInteger lastPaid = getLastPaid(wallet, profitDate);
+                                //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
+                                //todo 可能存在精度问题
+                                Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
+                                if(lastDayProfit < 0){
+                                    lastDayProfit = 0d;
+                                }
+
+                                profit.setOpenid(openid);
+                                profit.setWallet(StringUtils.lowerCase(wallet));
+                                profit.setCurrentUnpaid(currentUnpaid);
+                                profit.setReportHashRate(reportHashRate);
+                                profit.setAverageHashRate(averageHashrate);
+                                profit.setLastDayProfit(lastDayProfit);
+                                profit.setProfitTime(last.getTime());
+                                profit.setCreateTime(now.getTime());
+                            }
+                            profitList.add(profit);
+                            logger.info("计算余额，openid:{},wallet:{},currentUnpaid:{},lastDayProfit:{}", openid, wallet, currentUnpaid, profit.getLastDayProfit());
+                            Thread.sleep(1000);
                         }
-                        profitList.add(profit);
-                        logger.info("计算余额，openid:{},wallet:{},currentUnpaid:{},lastDayProfit:{}", openid, wallet, currentUnpaid, profit.getLastDayProfit());
-                        Thread.sleep(1000);
+                        catch (Exception e){
+                            logger.error("每日收益单个计算失败,openid:{},wallet:{}", openid, wallet, e);
+                        }
                     }
 
                     profitMapper.batchInsert(profitList);
@@ -328,58 +339,76 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
 
     @Override
     public void inActiveTaskExecute() {
-        //获取所有已开启掉线提醒的账号
-        List<Subscribe> allSubscribe = subscribeMapper.getSetWarn();
-        if(CollectionUtils.isEmpty(allSubscribe)){
-            logger.info("{},没有用户需要执行掉线提醒", LocalDateTime.now());
-            return;
-        }
-
-        // 分页
-        List<List<Subscribe>> subscribePages = CommonUtils.pageList(allSubscribe, 50);
-
-        // 分页处理
-        for(List<Subscribe> subscribes : subscribePages){
-            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);//跟上述sql区别
-            WarnMapper warnMapperSession = sqlSession.getMapper(WarnMapper.class);
-            WorkerMapper workerMapperSession = sqlSession.getMapper(WorkerMapper.class);
-
-            //挨个查询每个用户矿机情况
-            for(Subscribe subscribe : subscribes){
-                String openid = subscribe.getOpenid();
-                String wallet = subscribe.getWallet();
-                if(StringUtils.isBlank(wallet)){
-                    continue;
-                }
-
-                //获取矿工状态
-                List<Worker> workers = monitorService.getWorkers(wallet);
-                if(CollectionUtils.isEmpty(workers)){
-                    continue;
-                }
-                Map<String, List<Worker>> workerMap = getInActiveWorkers(workers);
-                // 掉线矿工
-                List<Worker> inActiveWorkers = workerMap.get("inActive");
-                // 在线矿工
-                List<Worker> activeWorkers = workerMap.get("active");
-
-                // 矿池端所有矿机
-                Set<String> allWorkers = new HashSet<>();
-                for(Worker worker : workers){
-                    allWorkers.add(worker.getWorker());
-                }
-
-                //掉线名单
-                Set<String> warnWorkerNames = inActiveDeal(openid, wallet, allWorkers, warnMapperSession, activeWorkers, inActiveWorkers);
-
-                Integer threshold = subscribe.getThreshold();
-                List<WaveWorker> waveWorkers = new ArrayList<>();
-                if(threshold != null && threshold > 0 && threshold <= 100){
-                    waveWorkers = waveDeal(openid, wallet, workerMapperSession, activeWorkers, threshold, warnMapperSession);
-                }
+        try{
+            //获取所有已开启掉线提醒的账号
+            List<Subscribe> allSubscribe = subscribeMapper.getSetWarn();
+            if(CollectionUtils.isEmpty(allSubscribe)){
+                logger.info("{},没有用户需要执行掉线提醒", LocalDateTime.now());
+                return;
             }
 
-            sqlSession.commit();
+            // 分页
+            List<List<Subscribe>> subscribePages = CommonUtils.pageList(allSubscribe, 50);
+
+            // 分页处理
+            for(List<Subscribe> subscribes : subscribePages){
+                try{
+                    SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);//跟上述sql区别
+                    WarnMapper warnMapperSession = sqlSession.getMapper(WarnMapper.class);
+                    WorkerMapper workerMapperSession = sqlSession.getMapper(WorkerMapper.class);
+
+                    //挨个查询每个用户矿机情况
+                    for(Subscribe subscribe : subscribes){
+                        String openid = subscribe.getOpenid();
+                        String wallet = subscribe.getWallet();
+                        try{
+                            if(StringUtils.isBlank(wallet)){
+                                continue;
+                            }
+
+                            //获取矿工状态
+                            List<Worker> workers = monitorService.getWorkers(wallet);
+                            if(CollectionUtils.isEmpty(workers)){
+                                continue;
+                            }
+                            Map<String, List<Worker>> workerMap = getInActiveWorkers(workers);
+                            // 掉线矿工
+                            List<Worker> inActiveWorkers = workerMap.get("inActive");
+                            // 在线矿工
+                            List<Worker> activeWorkers = workerMap.get("active");
+
+                            // 矿池端所有矿机
+                            Set<String> allWorkers = new HashSet<>();
+                            for(Worker worker : workers){
+                                allWorkers.add(worker.getWorker());
+                            }
+
+                            //掉线名单
+                            Set<String> warnWorkerNames = inActiveDeal(openid, wallet, allWorkers, warnMapperSession, activeWorkers, inActiveWorkers);
+
+                            Integer threshold = subscribe.getThreshold();
+                            List<WaveWorker> waveWorkers = new ArrayList<>();
+                            if(threshold != null && threshold > 0 && threshold <= 100){
+                                waveWorkers = waveDeal(openid, wallet, workerMapperSession, activeWorkers, threshold, warnMapperSession);
+                            }
+
+                            System.out.println(JSON.toJSONString(warnWorkerNames));
+                            System.out.println(JSON.toJSONString(waveWorkers));
+                        }
+                        catch (Exception e){
+                            logger.error("掉线提醒任务异常，单个，openid:{},wallet:{}", openid, wallet, e);
+                        }
+                    }
+
+                    sqlSession.commit();
+                }
+                catch (Exception e){
+                    logger.error("掉线提醒任务异常，批量", e);
+                }
+            }
+        }
+        catch (Exception e){
+            logger.error("掉线提醒任务异常", e);
         }
     }
 
@@ -387,6 +416,11 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                                       Integer threshold, WarnMapper warnMapperSession){
         //获取上次矿工状态
         List<WorkerDao> workerDaosLast = workerMapper.getWorke(openid, wallet);
+        if(CollectionUtils.isEmpty(workerDaosLast)){
+            //插入所有本次在线矿工
+            insertActiveWorkers(openid, wallet, activeWorkers, workerMapperSession);
+            return null;
+        }
         //删除所有记录矿工
         workerMapperSession.delete(openid, wallet);
         //插入所有本次在线矿工
@@ -473,7 +507,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
         for(Warn warn : warnWorker){
             warnWorkerNames.add(warn.getInActiveWorker());
         }
-        System.out.println(JSON.toJSONString(warnWorkerNames));
+
         return warnWorkerNames;
     }
 
@@ -558,6 +592,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
             dao.setWallet(wallet);
             dao.setWorker(worker.getWorker());
             dao.setWorkerTime(worker.getTime());
+            dao.setLastseen(worker.getLastSeen());
             dao.setReportHashrate(worker.getReportedHashrate());
             dao.setCurrentHashrate(worker.getCurrentHashrate());
             dao.setAverageHashrate(worker.getAverageHashrate());
@@ -570,5 +605,52 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
         }
 
         workerMapperSession.insert(workerDaos);
+    }
+
+    @Override
+    public void profitTaskExecuteAsync() {
+//        try{
+//            Calendar recent = Calendar.getInstance();
+//            recent.add(Calendar.DATE, -7);
+//            //获取7天内活跃账号
+//            List<Subscribe> allSubscribe = subscribeMapper.getRecent(recent.getTime());
+//            if(CollectionUtils.isEmpty(allSubscribe)){
+//                logger.info("{},没有账户需要计算收益", LocalDateTime.now());
+//                return;
+//            }
+//
+//            // 分页
+//            List<List<Subscribe>> subscribePages = CommonUtils.pageList(allSubscribe, 500);
+//
+//            for(List<Subscribe> subscribes : subscribePages){
+//                asyncProfitService.inActiveTaskExecute(subscribes);
+//            }
+//        }
+//        catch (Exception e){
+//            logger.error("收益计算异常", e);
+//        }
+    }
+
+    @Override
+    public void inActiveTaskExecuteAsync() {
+//        try{
+//            //获取所有已开启掉线提醒的账号
+//            List<Subscribe> allSubscribe = subscribeMapper.getSetWarn();
+//            if(CollectionUtils.isEmpty(allSubscribe)){
+//                logger.info("{},没有用户需要执行掉线提醒", LocalDateTime.now());
+//                return;
+//            }
+//
+//            // 分页
+//            List<List<Subscribe>> subscribePages = CommonUtils.pageList(allSubscribe, 500);
+//
+//            // 分页处理
+//            for(List<Subscribe> subscribes : subscribePages){
+//                asyncInActiveWarnService.inActiveTaskExecute(subscribes);
+//            }
+//        }
+//        catch (Exception e){
+//            logger.error("掉线提醒任务异常", e);
+//        }
     }
 }

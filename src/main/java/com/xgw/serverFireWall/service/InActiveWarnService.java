@@ -32,4 +32,8 @@ public interface InActiveWarnService {
     void inActiveTaskExecute();
 
     void profitTaskExecute();
+
+    void profitTaskExecuteAsync();
+
+    void inActiveTaskExecuteAsync();
 }

@@ -57,6 +57,14 @@ public class InActiveWarnController {
 //    @ResponseBody
 //    public String test(HttpServletRequest request){
 ////        String uri = "https://api.weixin.qq.com/cgi-bin/token?appid=wx1c4e008cbe2d3846&secret=9f09b7dc70383df555813642091bb6f4&grant_type=client_credential";
-//        return request.getHeader("x-wx-openid");
+//        try{
+//            for(int i = 0;i<5;i++){
+//                inActiveWarnService.F1();
+//            }
+//        }
+//        catch (Exception e){
+//
+//        }
+//        return "11";
 //    }
 }

@@ -32,14 +32,14 @@
     </select>
 
     <insert id="insert" parameterType="java.util.List">
-        INSERT INTO workers(id, openid, wallet, worker, workerTime, reportHashrate, currentHashrate, averageHashrate, validShares, invalidShares, staleShares, createTime, updateTime)
+        INSERT INTO workers(id, openid, wallet, worker, workerTime, lastseen, reportHashrate, currentHashrate, averageHashrate, validShares, invalidShares, staleShares, createTime, updateTime)
         VALUES
         <foreach collection ="workers" item="worker" separator =",">
-            (#{worker.id}, #{worker.openid}, #{worker.wallet}, #{worker.worker}, #{worker.workerTime}, #{worker.reportHashrate}, #{worker.currentHashrate}, #{worker.averageHashrate}, #{worker.validShares}, #{worker.invalidShares}, #{worker.staleShares}, #{worker.createTime}, #{worker.updateTime})
+            (#{worker.id}, #{worker.openid}, #{worker.wallet}, #{worker.worker}, #{worker.workerTime}, #{worker.lastseen}, #{worker.reportHashrate}, #{worker.currentHashrate}, #{worker.averageHashrate}, #{worker.validShares}, #{worker.invalidShares}, #{worker.staleShares}, #{worker.createTime}, #{worker.updateTime})
         </foreach >
     </insert>
 
-    <delete id="delete" parameterType="java.util.String">
+    <delete id="delete" parameterType="java.lang.String">
         DELETE FROM workers
         WHERE openid = #{openid} AND wallet = #{wallet}
     </delete>
