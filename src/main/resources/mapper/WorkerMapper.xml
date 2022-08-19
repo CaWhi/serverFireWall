@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xgw.serverFireWall.dao.mapper.WorkerMapper">
+    <!--Student POJO映射结果集-->
+    <!--id:唯一标识-->
+    <!--type:具体的POJO对象类型-->
+    <resultMap id="WorkerDao" type="com.xgw.serverFireWall.dao.WorkerDao">
+        <!--column:主键字段也可以是查询语句中的别名字段-->
+        <!--property:对应POJO对象中的属性-->
+        <!--jdbcType:字段类型-->
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <id column="openid" property="openid" jdbcType="VARCHAR" />
+        <!--column:表的字段-->
+        <result column="wallet" property="wallet" jdbcType="VARCHAR" />
+        <result column="worker" property="worker" jdbcType="VARCHAR" />
+        <result column="workerTime" property="workerTime" jdbcType="INTEGER" />
+        <result column="lastseen" property="lastseen" jdbcType="INTEGER" />
+        <result column="reportHashrate" property="reportHashrate" jdbcType="INTEGER" />
+        <result column="currentHashrate" property="currentHashrate" jdbcType="INTEGER" />
+        <result column="averageHashrate" property="averageHashrate" jdbcType="INTEGER" />
+        <result column="validShares" property="validShares" jdbcType="INTEGER" />
+        <result column="invalidShares" property="invalidShares" jdbcType="INTEGER" />
+        <result column="staleShares" property="staleShares" jdbcType="INTEGER" />
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+    <select id="getWorke" parameterType="java.lang.String" resultMap="WorkerDao">
+        SELECT *
+        FROM workers
+        WHERE openid = #{openid} AND wallet = #{wallet}
+    </select>
+
+    <insert id="insert" parameterType="java.util.List">
+        INSERT INTO workers(id, openid, wallet, worker, workerTime, reportHashrate, currentHashrate, averageHashrate, validShares, invalidShares, staleShares, createTime, updateTime)
+        VALUES
+        <foreach collection ="workers" item="worker" separator =",">
+            (#{worker.id}, #{worker.openid}, #{worker.wallet}, #{worker.worker}, #{worker.workerTime}, #{worker.reportHashrate}, #{worker.currentHashrate}, #{worker.averageHashrate}, #{worker.validShares}, #{worker.invalidShares}, #{worker.staleShares}, #{worker.createTime}, #{worker.updateTime})
+        </foreach >
+    </insert>
+
+    <delete id="delete" parameterType="java.util.String">
+        DELETE FROM workers
+        WHERE openid = #{openid} AND wallet = #{wallet}
+    </delete>
+
+</mapper>

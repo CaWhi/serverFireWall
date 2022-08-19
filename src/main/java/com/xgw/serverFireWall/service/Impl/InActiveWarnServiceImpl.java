@@ -4,12 +4,16 @@ import com.alibaba.fastjson.JSON;
 import com.xgw.serverFireWall.Vo.ethermine.CurrentStatistics;
 import com.xgw.serverFireWall.Vo.ethermine.Payout;
 import com.xgw.serverFireWall.Vo.ethermine.Worker;
+import com.xgw.serverFireWall.Vo.inactive.WaveWorker;
+import com.xgw.serverFireWall.constant.Constants;
 import com.xgw.serverFireWall.dao.Profit;
 import com.xgw.serverFireWall.dao.Subscribe;
 import com.xgw.serverFireWall.dao.Warn;
+import com.xgw.serverFireWall.dao.WorkerDao;
 import com.xgw.serverFireWall.dao.mapper.ProfitMapper;
 import com.xgw.serverFireWall.dao.mapper.SubscribeMapper;
 import com.xgw.serverFireWall.dao.mapper.WarnMapper;
+import com.xgw.serverFireWall.dao.mapper.WorkerMapper;
 import com.xgw.serverFireWall.service.InActiveWarnService;
 import com.xgw.serverFireWall.service.MonitorService;
 import com.xgw.serverFireWall.utils.CommonUtils;
@@ -23,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -32,6 +37,7 @@ import java.util.*;
 public class InActiveWarnServiceImpl implements InActiveWarnService {
     private static Logger logger = LoggerFactory.getLogger(InActiveWarnServiceImpl.class);
 
+    //20分钟
     private static final int inactiveTime = 1200;
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -47,6 +53,9 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
 
     @Resource
     ProfitMapper profitMapper;
+
+    @Resource
+    WorkerMapper workerMapper;
 
     @Resource
     private SqlSessionTemplate sqlSessionTemplate;
@@ -91,12 +100,15 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
     }
 
     @Override
-    public Boolean updateWallet(String openid, String wallet) {
+    public Boolean updateWallet(String openid, String wallet, String email, Integer threshold) {
         try{
 //            String openid = getOpenID(loginCode);
 //            if(StringUtils.isBlank(openid) || StringUtils.isBlank(wallet)){
 //                return false;
 //            }
+            if(StringUtils.isBlank(wallet)){
+                return false;
+            }
 
             Subscribe subscribe = subscribeMapper.getByOpenId(openid);
 
@@ -104,6 +116,12 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
             if(subscribe != null){
                 subscribe.setUpdateTime(calendar.getTime());
                 subscribe.setWallet(wallet);
+                if(StringUtils.isNotBlank(email)){
+                    subscribe.setEmail(email);
+                }
+                if(threshold != null && threshold > 0 && threshold <= 100){
+                    subscribe.setThreshold(threshold);
+                }
 
                 subscribeMapper.update(subscribe);
             } else {
@@ -180,6 +198,10 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                     Set<String> openidSet = new HashSet<>();
                     Set<String> walletSet = new HashSet<>();
                     for(Subscribe subscribe : subscribes){
+                        if(StringUtils.isBlank(subscribe.getWallet())){
+                            continue;
+                        }
+
                         openidSet.add(subscribe.getOpenid());
                         walletSet.add(StringUtils.lowerCase(subscribe.getWallet()));
                     }
@@ -192,6 +214,10 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                     List<Profit> profitList = new ArrayList<>();
                     //遍历计算昨天收益
                     for(Subscribe subscribe : subscribes){
+                        if(StringUtils.isBlank(subscribe.getWallet())){
+                            continue;
+                        }
+
                         Calendar now = Calendar.getInstance();
                         String openid = subscribe.getOpenid();
                         String wallet = subscribe.getWallet();
@@ -226,6 +252,9 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                             //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
                             //todo 可能存在精度问题
                             Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
+                            if(lastDayProfit < 0){
+                                lastDayProfit = 0d;
+                            }
 
                             profit.setOpenid(openid);
                             profit.setWallet(StringUtils.lowerCase(wallet));
@@ -299,51 +328,153 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
 
     @Override
     public void inActiveTaskExecute() {
-        Calendar calendar = Calendar.getInstance();
         //获取所有已开启掉线提醒的账号
-        List<Subscribe> subscribes = subscribeMapper.getUnexpired(calendar.getTime());
-        if(CollectionUtils.isEmpty(subscribes)){
+        List<Subscribe> allSubscribe = subscribeMapper.getSetWarn();
+        if(CollectionUtils.isEmpty(allSubscribe)){
             logger.info("{},没有用户需要执行掉线提醒", LocalDateTime.now());
             return;
         }
 
-        SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);//跟上述sql区别
-        WarnMapper warnMapperSession = sqlSession.getMapper(WarnMapper.class);
+        // 分页
+        List<List<Subscribe>> subscribePages = CommonUtils.pageList(allSubscribe, 50);
 
-        //挨个查询每个用户矿机情况
-        for(Subscribe subscribe : subscribes){
-            String openid = subscribe.getOpenid();
-            String wallet = subscribe.getWallet();
+        // 分页处理
+        for(List<Subscribe> subscribes : subscribePages){
+            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);//跟上述sql区别
+            WarnMapper warnMapperSession = sqlSession.getMapper(WarnMapper.class);
+            WorkerMapper workerMapperSession = sqlSession.getMapper(WorkerMapper.class);
 
-            //获取矿工状态
-            List<Worker> workers = monitorService.getWorkers(wallet);
-            if(CollectionUtils.isEmpty(workers)){
-                continue;
+            //挨个查询每个用户矿机情况
+            for(Subscribe subscribe : subscribes){
+                String openid = subscribe.getOpenid();
+                String wallet = subscribe.getWallet();
+                if(StringUtils.isBlank(wallet)){
+                    continue;
+                }
+
+                //获取矿工状态
+                List<Worker> workers = monitorService.getWorkers(wallet);
+                if(CollectionUtils.isEmpty(workers)){
+                    continue;
+                }
+                Map<String, List<Worker>> workerMap = getInActiveWorkers(workers);
+                // 掉线矿工
+                List<Worker> inActiveWorkers = workerMap.get("inActive");
+                // 在线矿工
+                List<Worker> activeWorkers = workerMap.get("active");
+
+                // 矿池端所有矿机
+                Set<String> allWorkers = new HashSet<>();
+                for(Worker worker : workers){
+                    allWorkers.add(worker.getWorker());
+                }
+
+                //掉线名单
+                Set<String> warnWorkerNames = inActiveDeal(openid, wallet, allWorkers, warnMapperSession, activeWorkers, inActiveWorkers);
+
+                Integer threshold = subscribe.getThreshold();
+                List<WaveWorker> waveWorkers = new ArrayList<>();
+                if(threshold != null && threshold > 0 && threshold <= 100){
+                    waveWorkers = waveDeal(openid, wallet, workerMapperSession, activeWorkers, threshold, warnMapperSession);
+                }
             }
-            Map<String, List<Worker>> workerMap = getInActiveWorkers(workers);
-            List<Worker> inActiveWorkers = workerMap.get("inActive");
-            List<Worker> activeWorkers = workerMap.get("active");
 
-            //获取未上线的所有矿机
-            List<Warn> warns = warnMapper.batchGetWarnUnDealed(openid, wallet);
+            sqlSession.commit();
+        }
+    }
 
-            List<Warn> dealedWarns = getDealedWarns(warns, activeWorkers);
-            List<Warn> warnWorker = getWarnWorkers(warns, inActiveWorkers, openid, wallet);
-            if(!CollectionUtils.isEmpty(dealedWarns)){
-                warnMapperSession.batchUpdateDealed(dealedWarns);
-            }
-            if(!CollectionUtils.isEmpty(warnWorker)){
-                warnMapperSession.batchInsert(warnWorker);
-            }
+    private List<WaveWorker> waveDeal(String openid, String wallet, WorkerMapper workerMapperSession, List<Worker> activeWorkers,
+                                      Integer threshold, WarnMapper warnMapperSession){
+        //获取上次矿工状态
+        List<WorkerDao> workerDaosLast = workerMapper.getWorke(openid, wallet);
+        //删除所有记录矿工
+        workerMapperSession.delete(openid, wallet);
+        //插入所有本次在线矿工
+        insertActiveWorkers(openid, wallet, activeWorkers, workerMapperSession);
 
-            Set<String> warnWorkerNames = new HashSet<>();
-            for(Warn warn : warnWorker){
-                warnWorkerNames.add(warn.getInActiveWorker());
-            }
-            System.out.println(JSON.toJSONString(warnWorkerNames));
+        Map<String, WorkerDao> workerDaoMap = new HashMap<>();
+        for(WorkerDao dao : workerDaosLast){
+            workerDaoMap.put(dao.getWorker(), dao);
         }
 
-        sqlSession.commit();
+        List<WaveWorker> waveWorkers = new ArrayList<>();
+        List<Warn> waveWarns = new ArrayList<>();
+        Calendar lastSeen = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance();
+        for(Worker worker : activeWorkers){
+            WorkerDao dao = workerDaoMap.get(worker.getWorker());
+            if(dao == null){
+                continue;
+            }
+
+            BigDecimal last = new BigDecimal(String.valueOf(dao.getReportHashrate()));
+            BigDecimal cur = new BigDecimal(String.valueOf(worker.getReportedHashrate()));
+            Integer low = cur.subtract(last).divide(last).multiply(new BigDecimal("100")).intValue();
+            if(low >= threshold){
+                WaveWorker wave = new WaveWorker();
+                wave.setWorker(worker.getWorker());
+                wave.setLastReportHashrate(CommonUtils.getHashRate(dao.getReportHashrate()));
+                wave.setReportHashrate(CommonUtils.getHashRate(worker.getReportedHashrate()));
+
+                waveWorkers.add(wave);
+
+                Warn waveWarn = new Warn();
+                waveWarn.setOpenid(openid);
+                waveWarn.setWallet(wallet);
+                waveWarn.setDealed(true);
+                waveWarn.setInActiveWorker(worker.getWorker());
+                waveWarn.setWarnType(Constants.WAVE);
+                lastSeen.setTimeInMillis(worker.getLastSeen()*1000L);
+                waveWarn.setLastSeen(lastSeen.getTime());
+                waveWarn.setCreateTime(calendar.getTime());
+
+                waveWarns.add(waveWarn);
+            }
+        }
+
+        if(!CollectionUtils.isEmpty(waveWarns)){
+            warnMapperSession.batchInsert(waveWarns);
+        }
+
+        return waveWorkers;
+    }
+
+    private Set<String> inActiveDeal(String openid, String wallet, Set<String> allWorkers, WarnMapper warnMapperSession,
+                              List<Worker> activeWorkers, List<Worker> inActiveWorkers){
+        //获取已提醒未上线的所有矿机
+        List<Warn> warns = warnMapper.batchGetWarnUnDealed(openid, wallet);
+
+        // 获取已提醒掉线，但是已经不存在的矿机，并删除
+        List<Long> noWarns = new ArrayList<>();
+        Iterator<Warn> iterator = warns.iterator();
+        while(iterator.hasNext()){
+            Warn warn = iterator.next();
+            if(!allWorkers.contains(warn.getInActiveWorker())){
+                noWarns.add(warn.getId());
+                iterator.remove();
+            }
+        }
+        if(!CollectionUtils.isEmpty(noWarns)){
+            warnMapperSession.delete(noWarns);
+        }
+
+        //已提醒掉线，但是已上线矿机
+        List<Warn> dealedWarns = getDealedWarns(warns, activeWorkers);
+        //未提醒掉线矿机
+        List<Warn> warnWorker = getWarnWorkers(warns, inActiveWorkers, openid, wallet);
+        if(!CollectionUtils.isEmpty(dealedWarns)){
+            warnMapperSession.batchUpdateDealed(dealedWarns, dealedWarns.get(0).getUpdateTime());
+        }
+        if(!CollectionUtils.isEmpty(warnWorker)){
+            warnMapperSession.batchInsert(warnWorker);
+        }
+
+        Set<String> warnWorkerNames = new HashSet<>();
+        for(Warn warn : warnWorker){
+            warnWorkerNames.add(warn.getInActiveWorker());
+        }
+        System.out.println(JSON.toJSONString(warnWorkerNames));
+        return warnWorkerNames;
     }
 
     //获取掉线且未提醒的矿机
@@ -361,11 +492,11 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
             //未提醒过
             if(warn == null){
                 warn = new Warn();
-                warn.setId(UUID.randomUUID().toString());
                 warn.setOpenid(openid);
                 warn.setWallet(wallet);
                 warn.setDealed(false);
                 warn.setInActiveWorker(worker.getWorker());
+                warn.setWarnType(Constants.INACTIVE);
                 lastSeen.setTimeInMillis(worker.getLastSeen()*1000L);
                 warn.setLastSeen(lastSeen.getTime());
                 warn.setCreateTime(calendar.getTime());
@@ -412,5 +543,32 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
         result.put("inActive", inActiveWorkers);
 
         return result;
+    }
+
+    private void insertActiveWorkers(String openid, String wallet, List<Worker> workers, WorkerMapper workerMapperSession){
+        if(CollectionUtils.isEmpty(workers)){
+            return;
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        List<WorkerDao> workerDaos = new ArrayList<>();
+        for(Worker worker : workers){
+            WorkerDao dao = new WorkerDao();
+            dao.setOpenid(openid);
+            dao.setWallet(wallet);
+            dao.setWorker(worker.getWorker());
+            dao.setWorkerTime(worker.getTime());
+            dao.setReportHashrate(worker.getReportedHashrate());
+            dao.setCurrentHashrate(worker.getCurrentHashrate());
+            dao.setAverageHashrate(worker.getAverageHashrate());
+            dao.setValidShares(worker.getValidShares());
+            dao.setInvalidShares(worker.getInvalidShares());
+            dao.setStaleShares(worker.getStaleShares());
+            dao.setCreateTime(calendar.getTime());
+
+            workerDaos.add(dao);
+        }
+
+        workerMapperSession.insert(workerDaos);
     }
 }

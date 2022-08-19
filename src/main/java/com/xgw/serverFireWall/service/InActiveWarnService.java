@@ -19,7 +19,7 @@ public interface InActiveWarnService {
      * @param wallet 钱包
      * @return
      */
-    Boolean updateWallet(String openid, String wallet);
+    Boolean updateWallet(String openid, String wallet, String email, Integer threshold);
 
     /**
      * 获取用户历史收益

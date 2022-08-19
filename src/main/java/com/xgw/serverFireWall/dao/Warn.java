@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 
 public class Warn {
-    private String id;
+    private Long id;
 
     private String openid;
 
@@ -18,17 +18,19 @@ public class Warn {
 
     private Boolean dealed;
 
+    private String warnType;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh",timezone = "GMT+8")
     private Date createTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",locale = "zh",timezone = "GMT+8")
     private Date updateTime;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -86,5 +88,13 @@ public class Warn {
 
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public String getWarnType() {
+        return warnType;
+    }
+
+    public void setWarnType(String warnType) {
+        this.warnType = warnType;
     }
 }

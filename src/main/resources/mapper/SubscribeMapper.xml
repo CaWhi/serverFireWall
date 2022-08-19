@@ -11,6 +11,8 @@
         <id column="openid" property="openid" jdbcType="VARCHAR" />
         <!--column:表的字段-->
         <result column="wallet" property="wallet" jdbcType="VARCHAR" />
+        <result column="email" property="email" jdbcType="VARCHAR" />
+        <result column="threshold" property="threshold" jdbcType="INTEGER" />
         <result column="expireTime" property="expireTime" jdbcType="TIMESTAMP" />
         <result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
         <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP" />
@@ -34,9 +36,15 @@
         WHERE expireTime &gt;= #{now}
     </select>
 
+    <select id="getSetWarn" resultMap="Subscribe">
+        SELECT *
+        FROM subscribes
+        WHERE !ISNULL(email) OR !ISNULL(threshold)
+    </select>
+
     <insert id="insert" parameterType="com.xgw.serverFireWall.dao.Subscribe">
-        INSERT INTO subscribes(openid, wallet, expireTime, createTime, updateTime)
-        VALUES (#{openid}, #{wallet}, #{expireTime}, #{createTime}, #{updateTime})
+        INSERT INTO subscribes(openid, wallet, expireTime, email, threshold, createTime, updateTime)
+        VALUES (#{openid}, #{wallet}, #{expireTime}, #{email}, #{threshold}, #{createTime}, #{updateTime})
     </insert>
 
     <!--更新数据-->
@@ -45,6 +53,8 @@
         SET openid = #{openid},
             wallet  = #{wallet},
             expireTime    = #{expireTime},
+            email    = #{email},
+            threshold    = #{threshold},
             createTime      = #{createTime},
             updateTime      = #{updateTime}
         WHERE openid = #{openid}

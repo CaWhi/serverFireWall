@@ -8,13 +8,14 @@
         <!--column:主键字段也可以是查询语句中的别名字段-->
         <!--property:对应POJO对象中的属性-->
         <!--jdbcType:字段类型-->
-        <id column="id" property="id" jdbcType="VARCHAR" />
+        <id column="id" property="id" jdbcType="INTEGER" />
         <id column="openid" property="openid" jdbcType="VARCHAR" />
         <!--column:表的字段-->
         <result column="wallet" property="wallet" jdbcType="VARCHAR" />
         <result column="inActiveWorker" property="inActiveWorker" jdbcType="VARCHAR" />
         <result column="lastSeen" property="lastSeen" jdbcType="TIMESTAMP" />
         <result column="dealed" property="dealed" jdbcType="BOOLEAN" />
+        <result column="warnType" property="warnType" jdbcType="VARCHAR" />
         <result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
         <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP" />
     </resultMap>
@@ -22,25 +23,28 @@
     <select id="batchGetWarnUnDealed" parameterType="java.lang.String" resultMap="Warn">
         SELECT *
         FROM warns
-        WHERE openid = #{openid} AND wallet = #{wallet} AND dealed = false
+        WHERE openid = #{openid} AND wallet = #{wallet} AND dealed = false AND warnType = 'inactive'
     </select>
 
     <insert id="batchInsert" parameterType="java.util.List">
-        INSERT INTO warns(id, openid, wallet, inActiveWorker, lastSeen, dealed, createTime, updateTime)
+        INSERT INTO warns(id, openid, wallet, inActiveWorker, lastSeen, dealed, warnType, createTime, updateTime)
         VALUES
         <foreach collection ="warns" item="warn" separator =",">
-            (#{warn.id}, #{warn.openid}, #{warn.wallet}, #{warn.inActiveWorker}, #{warn.lastSeen}, #{warn.dealed}, #{warn.createTime}, #{warn.updateTime})
+            (#{warn.id}, #{warn.openid}, #{warn.wallet}, #{warn.inActiveWorker}, #{warn.lastSeen}, #{warn.dealed}, #{warn.warnType}, #{warn.createTime}, #{warn.updateTime})
         </foreach >
     </insert>
 
     <!--更新数据-->
-    <update id="batchUpdateDealed" parameterType="java.util.List">
-        <foreach collection ="warns" item="warn" separator =",">
-            UPDATE warns
-            SET dealed = #{warn.dealed},
-            updateTime  = #{warn.updateTime}
-            WHERE id = #{warn.id}
-        </foreach >
+    <update id="batchUpdateDealed">
+        UPDATE warns
+        SET dealed = 1,
+        updateTime  = #{updateTime}
+        WHERE id in (<foreach collection="warns" item="warn" separator=",">#{warn.id}</foreach >)
     </update>
+
+    <delete id="delete" parameterType="java.util.List">
+        DELETE FROM warns
+        WHERE id in (<foreach collection="ids" item="id" separator=",">#{id}</foreach >)
+    </delete>
 
 </mapper>

@@ -38,8 +38,8 @@ public class InActiveWarnController {
      */
     @RequestMapping(value = "/updateWallet", method = RequestMethod.GET)
     @ResponseBody
-    public String updateWallet(HttpServletRequest request, String wallet){
-        return inActiveWarnService.updateWallet(request.getHeader("x-wx-openid"), wallet).toString();
+    public String updateWallet(HttpServletRequest request, String wallet, String email, Integer threshold){
+        return inActiveWarnService.updateWallet(request.getHeader("x-wx-openid"), wallet, email, threshold).toString();
     }
 
     /**

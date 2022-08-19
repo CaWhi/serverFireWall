@@ -15,6 +15,8 @@ public interface SubscribeMapper {
 
     List<Subscribe> getUnexpired(Date now);
 
+    List<Subscribe> getSetWarn();
+
     List<Subscribe> getRecent(Date last);
 
     void insert(Subscribe subscribe);

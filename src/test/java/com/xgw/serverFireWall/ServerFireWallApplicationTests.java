@@ -20,7 +20,7 @@ class ServerFireWallApplicationTests {
 	void contextLoads() {
 //		try{
 //			for(int i=0;i<1;i++){
-				inActiveWarnService.profitTaskExecute();
+//				inActiveWarnService.profitTaskExecute();
 //			}
 //		}
 //		catch (Exception e){
@@ -28,6 +28,7 @@ class ServerFireWallApplicationTests {
 //		}
 //		subscribeMapper.getByOpenId("oQyaC5A-OVPr0Er9BmPqFrIoqIe0");
 //		System.out.println(JSON.toJSONString(profitMapper.getUserLastProfit("oQyaC5K8-2w1DCY20BsVzmKW95GI", "0xa2c4c39c7e17900e48613a0292a882468773a6e0", 0, 25)));
+		inActiveWarnService.inActiveTaskExecute();
 	}
 
 }
