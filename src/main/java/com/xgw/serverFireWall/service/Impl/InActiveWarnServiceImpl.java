@@ -257,7 +257,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                                 profit.setCreateTime(now.getTime());
                             } else {
                                 //计算昨天收益
-                                BigInteger lastPaid = getLastPaid(wallet, profitDate);
+                                BigInteger lastPaid = getLastPaid(wallet, openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), now.getTime());
                                 //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
                                 //todo 可能存在精度问题
                                 Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
@@ -298,21 +298,23 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
     /**
      * 获取昨天支付的数额
      * @param wallet
-     * @param profitDate
+     * @param profit
      * @return
      */
-    private BigInteger getLastPaid(String wallet, String profitDate){
+    private BigInteger getLastPaid(String wallet, Profit profit, Date now){
         List<Payout> payouts = monitorService.getMinerPayouts(wallet);
 
         if(CollectionUtils.isEmpty(payouts)){
             return new BigInteger("0");
         }
 
+        Date last = profit.getCreateTime();
+
         BigInteger lastPaid = new BigInteger("0");
         for(Payout payout : payouts){
             Date time = new Date(payout.getPaidOn() * 1000);
-            String timeStr = sdf.format(time);
-            if(StringUtils.equals(timeStr, profitDate)){
+//            String timeStr = sdf.format(time);
+            if(time.compareTo(last) > 0 && time.compareTo(now) <= 0){
                 lastPaid = lastPaid.add(payout.getAmount());
             }
         }
