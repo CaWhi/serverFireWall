@@ -126,9 +126,12 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                 if(StringUtils.isNotBlank(email)){
                     subscribe.setEmail(email);
                 }
-                if(threshold == null){
-                    subscribe.setThreshold(null);
-                } else if(threshold > 0 && threshold <= 100){
+                //开启波动提醒
+                if(threshold != null && threshold > 0 && threshold <= 100){
+                    subscribe.setThreshold(threshold);
+                }
+                //关闭波动提醒
+                if(threshold != null && threshold <= 0){
                     subscribe.setThreshold(threshold);
                 }
 
