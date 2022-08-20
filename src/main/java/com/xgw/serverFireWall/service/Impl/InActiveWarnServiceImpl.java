@@ -29,6 +29,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -440,14 +441,20 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
         Calendar lastSeen = Calendar.getInstance();
         Calendar calendar = Calendar.getInstance();
         for(Worker worker : activeWorkers){
+            System.out.println(JSON.toJSONString(worker));
             WorkerDao dao = workerDaoMap.get(worker.getWorker());
             if(dao == null){
                 continue;
             }
-
+            System.out.println(JSON.toJSONString(dao));
             BigDecimal last = new BigDecimal(String.valueOf(dao.getReportHashrate()));
             BigDecimal cur = new BigDecimal(String.valueOf(worker.getReportedHashrate()));
-            Integer low = cur.subtract(last).divide(last).multiply(new BigDecimal("100")).intValue();
+            if(cur.compareTo(last) >= 0){
+                continue;
+            }
+            Integer low = cur.subtract(last).divide(last, 5, RoundingMode.HALF_UP).multiply(new BigDecimal("100")).intValue();
+            low = Math.abs(low);
+            System.out.println(JSON.toJSONString(low));
             if(low >= threshold){
                 WaveWorker wave = new WaveWorker();
                 wave.setWorker(worker.getWorker());
@@ -469,6 +476,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                 waveWarns.add(waveWarn);
             }
         }
+        System.out.println(JSON.toJSONString(waveWarns));
 
         if(!CollectionUtils.isEmpty(waveWarns)){
             warnMapperSession.batchInsert(waveWarns);

@@ -66,22 +66,22 @@ public class CommonUtils {
         String unit = "";
         switch(num){
             case 0:
-                unit = "KH/s";
+                unit = "H/s";
                 break;
             case 1:
-                unit = "MH/s";
+                unit = "KH/s";
                 break;
             case 2:
-                unit = "GH/s";
+                unit = "MH/s";
                 break;
             case 3:
-                unit = "TH/s";
+                unit = "GH/s";
                 break;
             case 4:
-                unit = "PH/s";
+                unit = "TH/s";
                 break;
             default:
-                unit = "KH/s";
+                unit = "H/s";
                 break;
         }
 

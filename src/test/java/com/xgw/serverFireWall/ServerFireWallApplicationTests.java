@@ -29,6 +29,7 @@ class ServerFireWallApplicationTests {
 //				inActiveWarnService.profitTaskExecute();
 //			}
 //		Profit profit = new Profit();
+//		CommonUtils.getHashRate(91888433l);
 //		profit.setCreateTime(new Date(1660841247000l));
 //		getLastPaid("0x6dbdaacd224ec1574cef479d9d077d7cedb55e9f",profit,new Date(1660927865000l));
 //		}
