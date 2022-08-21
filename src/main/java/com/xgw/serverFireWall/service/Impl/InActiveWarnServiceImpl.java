@@ -17,6 +17,7 @@ import com.xgw.serverFireWall.dao.mapper.WorkerMapper;
 import com.xgw.serverFireWall.service.InActiveWarnService;
 import com.xgw.serverFireWall.service.MonitorService;
 import com.xgw.serverFireWall.utils.CommonUtils;
+import com.xgw.serverFireWall.utils.SendEmail;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
@@ -400,8 +401,32 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                                 waveWorkers = waveDeal(openid, wallet, workerMapperSession, activeWorkers, threshold, warnMapperSession);
                             }
 
-                            System.out.println(JSON.toJSONString(warnWorkerNames));
-                            System.out.println(JSON.toJSONString(waveWorkers));
+//                            System.out.println(JSON.toJSONString(warnWorkerNames));
+//                            System.out.println(JSON.toJSONString(waveWorkers));
+
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("钱包：").append(wallet).append("<br/>");
+                            Calendar now = Calendar.getInstance();
+                            sb.append("记录时间：").append(sdf.format(now.getTime())).append("<br/>");
+                            if(warnWorkerNames.size() > 0){
+                                sb.append("已掉线矿机：");
+                                for(String name : warnWorkerNames){
+                                    sb.append(name).append("、");
+                                }
+                                sb.deleteCharAt(sb.length()-1);
+                                sb.append("<br/>");
+                            }
+                            if(!CollectionUtils.isEmpty(waveWorkers)){
+                                sb.append("矿机算力出现波动：");
+                                for(WaveWorker worker : waveWorkers){
+                                    sb.append("名称：").append(worker.getWorker()).append(" ");
+                                    sb.append("原算力：").append(worker.getLastReportHashrate()).append(" ");
+                                    sb.append("当前算力：").append(worker.getReportHashrate()).append(";");
+                                }
+                                sb.deleteCharAt(sb.length()-1);
+                            }
+
+                            SendEmail.send(sb.toString(), subscribe.getEmail());
                         }
                         catch (Exception e){
                             logger.error("掉线提醒任务异常，单个，openid:{},wallet:{}", openid, wallet, e);

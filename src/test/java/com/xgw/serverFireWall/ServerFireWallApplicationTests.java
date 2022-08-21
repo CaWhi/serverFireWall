@@ -39,6 +39,40 @@ class ServerFireWallApplicationTests {
 //		subscribeMapper.getByOpenId("oQyaC5A-OVPr0Er9BmPqFrIoqIe0");
 //		System.out.println(JSON.toJSONString(profitMapper.getUserLastProfit("oQyaC5K8-2w1DCY20BsVzmKW95GI", "0xa2c4c39c7e17900e48613a0292a882468773a6e0", 0, 25)));
 //		inActiveWarnService.inActiveTaskExecute();
+//		try{
+//			Set<String> inactive = new HashSet<>();
+//			inactive.add("3080");
+//			List<WaveWorker> waveWorkers = new ArrayList<>();
+//			WaveWorker waveWorker = new WaveWorker();
+//			waveWorker.setWorker("3080");
+//			waveWorker.setLastReportHashrate("91MH/s");
+//			waveWorker.setReportHashrate("22MH/s");
+//			waveWorkers.add(waveWorker);
+//
+//			StringBuilder sb = new StringBuilder();
+//			if(inactive.size() > 0){
+//				sb.append("已掉线矿机：");
+//				for(String name : inactive){
+//					sb.append(name).append("、");
+//				}
+//				sb.deleteCharAt(sb.length()-1);
+//				sb.append("<br/>");
+//			}
+//			if(!CollectionUtils.isEmpty(waveWorkers)){
+//				sb.append("矿机算力出现波动：");
+//				for(WaveWorker worker : waveWorkers){
+//					sb.append("名称：").append(worker.getWorker()).append(" ");
+//					sb.append("原算力：").append(worker.getLastReportHashrate()).append(" ");
+//					sb.append("当前算力：").append(worker.getReportHashrate()).append(";");
+//				}
+//				sb.deleteCharAt(sb.length()-1);
+//			}
+//
+//			SendEmail.send(sb.toString(),"974555368@qq.com");
+//		}
+//		catch (Exception e){
+//
+//		}
 	}
 
 	private BigInteger getLastPaid(String wallet, Profit profit, Date now){
