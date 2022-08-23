@@ -39,7 +39,7 @@
     <select id="getSetWarn" resultMap="Subscribe">
         SELECT *
         FROM subscribes
-        WHERE !ISNULL(email) OR threshold > 0
+        WHERE !ISNULL(email) OR threshold &gt; 0
     </select>
 
     <insert id="insert" parameterType="com.xgw.serverFireWall.dao.Subscribe">

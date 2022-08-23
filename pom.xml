@@ -83,6 +83,22 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>activation</artifactId>
+			<version>3.0</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/src/main/resources/lib/javax.activation-3.0-prelude.jar</systemPath>
+		</dependency>
+
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>mail</artifactId>
+			<version>3.0</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/src/main/resources/lib/javax.mail.jar</systemPath>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -90,6 +106,9 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<includeSystemScope>true</includeSystemScope>
+				</configuration>
 			</plugin>
 		</plugins>
 		<!-- 如果不添加此节点mybatis的mapper.xml文件不会被引用 -->
@@ -103,6 +122,13 @@
 				</includes>
 				<filtering>false</filtering>
 			</resource>
+<!--			<resource>-->
+<!--				<directory>lib</directory>-->
+<!--				<targetPath>/BOOT-INF/lib/</targetPath>-->
+<!--				<includes>-->
+<!--					<include>**/*.jar</include>-->
+<!--				</includes>-->
+<!--			</resource>-->
 		</resources>
 	</build>
 

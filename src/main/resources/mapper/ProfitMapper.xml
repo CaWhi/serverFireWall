@@ -68,4 +68,10 @@
         </foreach >
     </insert>
 
+    <select id="getUserProfitByDate" resultMap="Profit">
+        SELECT *
+        FROM profits
+        WHERE openid = #{openid} AND wallet = #{wallet} AND profitTime &gt;= #{start} AND profitTime  &lt;= #{end}
+    </select>
+
 </mapper>

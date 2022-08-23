@@ -24,6 +24,8 @@ class ServerFireWallApplicationTests {
 	@Test
 //	@Ignore
 	void contextLoads() {
+//		inActiveWarnService.getProfitsByDate("oQyaC5K8-2w1DCY20BsVzmKW95GI",
+//				StringUtils.lowerCase("0xa2C4c39C7e17900e48613a0292A882468773a6e0"),"2022-08-15","2022-08-22");
 //		try{
 //			for(int i=0;i<1;i++){
 //				inActiveWarnService.profitTaskExecute();

@@ -29,6 +29,8 @@ public interface InActiveWarnService {
      */
     List<Profit> getProfits(String openid, String wallet, Integer pageIndex, Integer pageSize);
 
+    List<Profit> getProfitsByDate(String openid, String wallet, String startDate, String endDate);
+
     void inActiveTaskExecute();
 
     void profitTaskExecute();

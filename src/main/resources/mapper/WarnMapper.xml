@@ -23,7 +23,7 @@
     <select id="batchGetWarnUnDealed" parameterType="java.lang.String" resultMap="Warn">
         SELECT *
         FROM warns
-        WHERE openid = #{openid} AND wallet = #{wallet} AND dealed = false AND warnType = 'inactive'
+        WHERE openid = #{openid} AND wallet = #{wallet} AND dealed = 0 AND warnType = 'inactive'
     </select>
 
     <insert id="batchInsert" parameterType="java.util.List">

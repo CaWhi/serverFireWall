@@ -4,6 +4,7 @@ import com.xgw.serverFireWall.dao.Profit;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 @Mapper
@@ -14,4 +15,7 @@ public interface ProfitMapper {
                                    @Param("offset") Integer offset, @Param("pageSize") Integer pageSize);
 
     void batchInsert(List<Profit> profits);
+
+    List<Profit> getUserProfitByDate(@Param("openid") String openid, @Param("wallet") String wallet,
+                                     @Param("start") Date start, @Param("end") Date end);
 }

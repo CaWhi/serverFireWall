@@ -693,4 +693,50 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
 //            logger.error("掉线提醒任务异常", e);
 //        }
     }
+
+    @Override
+    public List<Profit> getProfitsByDate(String openid, String wallet, String startDate, String endDate) {
+        try{
+            if(StringUtils.isBlank(wallet) || StringUtils.isBlank(startDate) || StringUtils.isBlank(endDate)){
+                return null;
+            }
+            Date start = sdf.parse(startDate);
+            Date end = sdf.parse(endDate);
+
+            List<Profit> profits = profitMapper.getUserProfitByDate(openid, StringUtils.lowerCase(wallet), start, end);
+            Map<String, Profit> profitMap = new HashMap<>();
+            for(Profit profit : profits){
+                profitMap.put(sdf.format(profit.getProfitTime()), profit);
+            }
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(start);
+            List<Profit> result = new ArrayList<>();
+            while (calendar.getTime().compareTo(end) <= 0){
+                Profit profit = profitMap.get(sdf.format(calendar.getTime()));
+                if(profit == null) {
+                    profit = new Profit();
+                    profit.setOpenid(openid);
+                    profit.setWallet(wallet);
+                    profit.setProfitTime(calendar.getTime());
+                }
+                result.add(profit);
+
+                calendar.add(Calendar.DATE, 1);
+            }
+
+            Collections.sort(result, new Comparator<Profit>() {
+                @Override
+                public int compare(Profit o1, Profit o2) {
+                    return o1.getProfitTime().compareTo(o2.getProfitTime());
+                }
+            });
+
+            return result;
+        }
+        catch (Exception e){
+            logger.error("按时间查询每日收益异常，", e);
+            return null;
+        }
+    }
 }
