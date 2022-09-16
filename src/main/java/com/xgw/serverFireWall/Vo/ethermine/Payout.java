@@ -31,6 +31,9 @@ public class Payout implements Serializable {
      */
     private String txHash;
 
+    private String startHash;
+    private String endHash;
+
     public Long getPaidOn() {
         return paidOn;
     }
@@ -69,5 +72,21 @@ public class Payout implements Serializable {
 
     public void setTxHash(String txHash) {
         this.txHash = txHash;
+    }
+
+    public String getStartHash() {
+        return startHash;
+    }
+
+    public void setStartHash(String startHash) {
+        this.startHash = startHash;
+    }
+
+    public String getEndHash() {
+        return endHash;
+    }
+
+    public void setEndHash(String endHash) {
+        this.endHash = endHash;
     }
 }

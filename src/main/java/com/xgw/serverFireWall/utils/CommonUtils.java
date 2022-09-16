@@ -1,5 +1,6 @@
 package com.xgw.serverFireWall.utils;
 
+import com.xgw.serverFireWall.constant.CoinConstants;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
@@ -11,18 +12,31 @@ import java.util.List;
 public class CommonUtils {
     public static BigDecimal baseUnit = new BigDecimal("1000000000000000000");
 
+    public static BigDecimal rvnBaseUnit = new BigDecimal("100000000");
+
+    public static BigDecimal ergoBaseUnit = new BigDecimal("1000000000");
+
     /**
      * 币数量基础单位转换
      * @param amount
      * @return
      */
-    public static Double dealCoinAmount(BigInteger amount){
+    public static Double dealCoinAmount(BigInteger amount, String coin){
         if(amount==null){
             amount = new BigInteger("0");
         }
         BigDecimal amountD = new BigDecimal(amount);
 
-        return amountD.divide(baseUnit, 5, RoundingMode.HALF_UP).doubleValue();
+        BigDecimal curUnit = baseUnit;
+        if(CoinConstants.ETH.equals(coin) || CoinConstants.ETC.equals(coin)){
+            curUnit = baseUnit;
+        } else if(CoinConstants.RVN.equals(coin)){
+            curUnit = rvnBaseUnit;
+        } else if(CoinConstants.ERGO.equals(coin)){
+            curUnit = ergoBaseUnit;
+        }
+
+        return amountD.divide(curUnit, 5, RoundingMode.HALF_UP).doubleValue();
     }
 
     public static <T> List<List<T>> pageList(List<T> data, Integer pageSize){
@@ -88,5 +102,28 @@ public class CommonUtils {
         rate = rate.setScale(2, RoundingMode.HALF_UP);
 
         return rate.toString() + unit;
+    }
+
+    public static String getProfitTable(String coin){
+        String name = "profits";
+        switch (coin){
+            case CoinConstants.ETH:
+                name = "profits";
+                break;
+            case CoinConstants.ETC:
+                name += CoinConstants.ETC;
+                break;
+            case CoinConstants.RVN:
+                name += CoinConstants.RVN;
+                break;
+            case CoinConstants.ERGO:
+                name += CoinConstants.ERGO;
+                break;
+            default:
+                name = "profits";
+                break;
+        }
+
+        return name;
     }
 }

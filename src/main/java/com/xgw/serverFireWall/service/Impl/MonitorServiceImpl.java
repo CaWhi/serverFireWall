@@ -2,6 +2,9 @@ package com.xgw.serverFireWall.service.Impl;
 
 import com.alibaba.fastjson.JSON;
 import com.xgw.serverFireWall.Vo.ethermine.*;
+import com.xgw.serverFireWall.constant.CoinConstants;
+import com.xgw.serverFireWall.dao.Coin;
+import com.xgw.serverFireWall.dao.mapper.CoinMapper;
 import com.xgw.serverFireWall.service.MonitorService;
 import com.xgw.serverFireWall.utils.HttpClientUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -9,10 +12,14 @@ import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +45,9 @@ public class MonitorServiceImpl implements MonitorService {
     private static final String statusProp = "status";
 
     private static final String dataProp = "data";
+
+    @Resource
+    CoinMapper coinMapper;
 
     /**
      * 十分钟
@@ -147,20 +157,20 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     @Override
-    public Data getMinerDashboard(String wallet) {
+    public Data getMinerDashboard(String wallet, String url) {
         try{
             String str;
-            if(getFromCache(wallet)){
-                str = getCache(wallet);
-
-                if(StringUtils.isBlank(str)){
-                    str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy, statusProp, dataProp);
-                    setCache(wallet,str);
-                }
-            } else {
-                str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", baseURI, wallet), OK, proxy, statusProp, dataProp);
+//            if(getFromCache(wallet)){
+//                str = getCache(wallet);
+//
+//                if(StringUtils.isBlank(str)){
+//                    str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", StringUtils.isBlank(url) ? baseURI : url, wallet), OK, proxy, statusProp, dataProp);
+//                    setCache(wallet,str);
+//                }
+//            } else {
+                str = HttpClientUtil.get(String.format("%s/miner/%s/dashboard", StringUtils.isBlank(url) ? baseURI : url, wallet), OK, proxy, statusProp, dataProp);
                 setCache(wallet,str);
-            }
+//            }
             Data result = JSON.parseObject(str, Data.class);
 
             return result;
@@ -186,9 +196,9 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     @Override
-    public List<Payout> getMinerPayouts(String wallet) {
+    public List<Payout> getMinerPayouts(String wallet, String url) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/payouts", baseURI, wallet), OK, proxy, statusProp, dataProp);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/payouts", StringUtils.isBlank(url) ? baseURI : url, wallet), OK, proxy, statusProp, dataProp);
             List<Payout> result = JSON.parseArray(str, Payout.class);
 
             return result;
@@ -214,9 +224,9 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     @Override
-    public Settings getMinerSettings(String wallet) {
+    public Settings getMinerSettings(String wallet, String url) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/settings", baseURI, wallet), OK, proxy, statusProp, dataProp);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/settings", StringUtils.isBlank(url) ? baseURI : url, wallet), OK, proxy, statusProp, dataProp);
             Settings result = JSON.parseObject(str, Settings.class);
 
             return result;
@@ -228,10 +238,10 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     @Override
-    public CurrentStatistics getMinerCurrentStats(String wallet) {
+    public CurrentStatistics getMinerCurrentStats(String wallet, String url) {
         String str="";
         try{
-            str = HttpClientUtil.get(String.format("%s/miner/%s/currentStats", baseURI, wallet), OK, proxy, statusProp, dataProp);
+            str = HttpClientUtil.get(String.format("%s/miner/%s/currentStats", StringUtils.isBlank(url) ? baseURI : url, wallet), OK, proxy, statusProp, dataProp);
             CurrentStatistics result = JSON.parseObject(str, CurrentStatistics.class);
 
             return result;
@@ -244,9 +254,9 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     @Override
-    public List<Worker> getWorkers(String wallet) {
+    public List<Worker> getWorkers(String wallet, String url) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/miner/%s/workers", baseURI, wallet), OK, proxy, statusProp, dataProp);
+            String str = HttpClientUtil.get(String.format("%s/miner/%s/workers", StringUtils.isBlank(url) ? baseURI : url, wallet), OK, proxy, statusProp, dataProp);
             List<Worker> result = JSON.parseArray(str, Worker.class);
 
             return result;
@@ -300,10 +310,19 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     @Override
-    public PoolStatsData getPoolStats() {
+    public PoolStatsData getPoolStats(String url) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/poolStats", baseURI), OK, proxy, statusProp, dataProp);
+            String str = HttpClientUtil.get(String.format("%s/poolStats", StringUtils.isBlank(url) ? baseURI : url), OK, proxy, statusProp, dataProp);
             PoolStatsData result = JSON.parseObject(str, PoolStatsData.class);
+
+            if(result != null && result.getPrice() != null && result.getPrice().getCny() == null){
+                String huilv = "6.7";
+                List<Coin> coinList = coinMapper.getCoins("CNY");
+                if(!CollectionUtils.isEmpty(coinList)){
+                    huilv = coinList.get(0).getUrl();
+                }
+                result.getPrice().setCny(result.getPrice().getUsd().multiply(new BigDecimal(huilv)).setScale(3, RoundingMode.HALF_UP));
+            }
 
             return result;
         }
@@ -328,9 +347,9 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     @Override
-    public NetworkStats getNetworkStats() {
+    public NetworkStats getNetworkStats(String url) {
         try{
-            String str = HttpClientUtil.get(String.format("%s/networkStats", baseURI), OK, proxy, statusProp, dataProp);
+            String str = HttpClientUtil.get(String.format("%s/networkStats", StringUtils.isBlank(url) ? baseURI : url), OK, proxy, statusProp, dataProp);
             NetworkStats result = JSON.parseObject(str, NetworkStats.class);
 
             return result;
@@ -371,6 +390,27 @@ public class MonitorServiceImpl implements MonitorService {
             if (os != null) {
                 os.close();
             }
+        }
+    }
+
+    @Override
+    public String getCoinUrl(String coin) {
+        try{
+            if(StringUtils.isBlank(coin)){
+                coin = CoinConstants.ETH;
+            }
+
+            List<Coin> coin1 = coinMapper.getCoins(coin);
+
+            if(CollectionUtils.isEmpty(coin1)){
+                return baseURI;
+            }
+
+            return coin1.get(0).getUrl();
+        }
+        catch (Exception e){
+            logger.error("getCoinUrl Exception", e);
+            return baseURI;
         }
     }
 }

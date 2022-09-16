@@ -10,7 +10,7 @@ public interface MonitorService {
      * @param wallet
      * @return
      */
-    Data getMinerDashboard(String wallet);
+    Data getMinerDashboard(String wallet, String url);
 
     /**
      * History
@@ -24,7 +24,7 @@ public interface MonitorService {
      * @param wallet
      * @return
      */
-    List<Payout> getMinerPayouts(String wallet);
+    List<Payout> getMinerPayouts(String wallet, String url);
 
     /**
      * Rounds
@@ -38,21 +38,21 @@ public interface MonitorService {
      * @param wallet
      * @return
      */
-    Settings getMinerSettings(String wallet);
+    Settings getMinerSettings(String wallet, String url);
 
     /**
      * Statistics
      * @param wallet
      * @return
      */
-    CurrentStatistics getMinerCurrentStats(String wallet);
+    CurrentStatistics getMinerCurrentStats(String wallet, String url);
 
     /**
      * All worker statistics
      * @param wallet
      * @return
      */
-    List<Worker> getWorkers(String wallet);
+    List<Worker> getWorkers(String wallet, String url);
 
     /**
      * Individual historical worker statistics
@@ -82,7 +82,7 @@ public interface MonitorService {
      * Basic Pool Stats
      * @return
      */
-    PoolStatsData getPoolStats();
+    PoolStatsData getPoolStats(String url);
 
     /**
      * Mined Blocks Stats
@@ -94,11 +94,13 @@ public interface MonitorService {
      * Network Statistics
      * @return
      */
-    NetworkStats getNetworkStats();
+    NetworkStats getNetworkStats(String url);
 
     /**
      * Server Hashrate Stats
      * @return
      */
     List<ServerStat> getServersHistory();
+
+    String getCoinUrl(String coin);
 }

@@ -11,6 +11,7 @@
         <id column="openid" property="openid" jdbcType="VARCHAR" />
         <!--column:表的字段-->
         <result column="wallet" property="wallet" jdbcType="VARCHAR" />
+        <result column="coin" property="coin" jdbcType="VARCHAR" />
         <result column="email" property="email" jdbcType="VARCHAR" />
         <result column="threshold" property="threshold" jdbcType="INTEGER" />
         <result column="expireTime" property="expireTime" jdbcType="TIMESTAMP" />
@@ -24,10 +25,18 @@
         WHERE openid = #{openid} AND wallet = #{wallet}
     </select>
 
-    <select id="getByOpenId" parameterType="java.lang.String" resultMap="Subscribe">
+    <select id="getByOpenId" resultMap="Subscribe">
         SELECT *
         FROM subscribes
         WHERE openid = #{openid}
+        <choose>
+            <when test="coin == 'ETH'">
+                AND (ISNULL(coin) OR coin = #{coin})
+            </when>
+            <otherwise>
+                AND coin = #{coin}
+            </otherwise>
+        </choose>
     </select>
 
     <select id="getUnexpired" parameterType="java.util.Date" resultMap="Subscribe">
@@ -43,8 +52,8 @@
     </select>
 
     <insert id="insert" parameterType="com.xgw.serverFireWall.dao.Subscribe">
-        INSERT INTO subscribes(openid, wallet, expireTime, email, threshold, createTime, updateTime)
-        VALUES (#{openid}, #{wallet}, #{expireTime}, #{email}, #{threshold}, #{createTime}, #{updateTime})
+        INSERT INTO subscribes(openid, wallet, coin, expireTime, email, threshold, createTime, updateTime)
+        VALUES (#{openid}, #{wallet}, #{coin}, #{expireTime}, #{email}, #{threshold}, #{createTime}, #{updateTime})
     </insert>
 
     <!--更新数据-->
@@ -52,18 +61,35 @@
         UPDATE subscribes
         SET openid = #{openid},
             wallet  = #{wallet},
+            coin  = #{coin},
             expireTime    = #{expireTime},
             email    = #{email},
             threshold    = #{threshold},
             createTime      = #{createTime},
             updateTime      = #{updateTime}
         WHERE openid = #{openid}
+        <choose>
+            <when test="#{coin} == 'ETH'">
+                AND (ISNULL(coin) OR coin = #{coin})
+            </when>
+            <otherwise>
+                AND coin = #{coin}
+            </otherwise>
+        </choose>
     </update>
 
-    <select id="getRecent" parameterType="java.util.Date" resultMap="Subscribe">
+    <select id="getRecent" resultMap="Subscribe">
         SELECT *
         FROM subscribes
-        WHERE updateTime &gt;= #{last} OR createTime &gt;= #{last}
+        WHERE (updateTime &gt;= #{last} OR createTime &gt;= #{last})
+        <choose>
+            <when test="coin == 'ETH'">
+                AND (ISNULL(coin) OR coin = #{coin})
+            </when>
+            <otherwise>
+                AND coin = #{coin}
+            </otherwise>
+        </choose>
         ORDER BY updateTime DESC,createTime DESC
     </select>
 

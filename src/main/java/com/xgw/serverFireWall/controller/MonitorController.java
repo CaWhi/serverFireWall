@@ -10,8 +10,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
-@Controller()
+@Controller
 @RequestMapping("/monitor")
 public class MonitorController {
     private static Logger logger = LoggerFactory.getLogger(MonitorController.class);
@@ -21,8 +22,8 @@ public class MonitorController {
 
     @RequestMapping(value = "/poolStats", method = RequestMethod.GET)
     @ResponseBody
-    public String poolStats(){
-        return JSON.toJSONString(monitorService.getPoolStats());
+    public String poolStats(HttpServletRequest request){
+        return JSON.toJSONString(monitorService.getPoolStats(monitorService.getCoinUrl(request.getHeader("coin"))));
     }
 
 //    @RequestMapping(value = "/blocksHistory", method = RequestMethod.GET)
@@ -33,8 +34,8 @@ public class MonitorController {
 
     @RequestMapping(value = "/networkStats", method = RequestMethod.GET)
     @ResponseBody
-    public String networkStats(){
-        return JSON.toJSONString(monitorService.getNetworkStats());
+    public String networkStats(HttpServletRequest request){
+        return JSON.toJSONString(monitorService.getNetworkStats(monitorService.getCoinUrl(request.getHeader("coin"))));
     }
 
 //    @RequestMapping(value = "/serversHistory", method = RequestMethod.GET)
@@ -45,8 +46,8 @@ public class MonitorController {
 
     @RequestMapping(value = "/minerDashboard", method = RequestMethod.GET)
     @ResponseBody
-    public String minerDashboard(String wallet){
-        return JSON.toJSONString(monitorService.getMinerDashboard(wallet));
+    public String minerDashboard(String wallet, HttpServletRequest request){
+        return JSON.toJSONString(monitorService.getMinerDashboard(wallet, monitorService.getCoinUrl(request.getHeader("coin"))));
     }
 
 //    @RequestMapping(value = "/minerHistory", method = RequestMethod.GET)
@@ -69,14 +70,14 @@ public class MonitorController {
 
     @RequestMapping(value = "/minerSettings", method = RequestMethod.GET)
     @ResponseBody
-    public String minerSettings(String wallet){
-        return JSON.toJSONString(monitorService.getMinerSettings(wallet));
+    public String minerSettings(String wallet, HttpServletRequest request){
+        return JSON.toJSONString(monitorService.getMinerSettings(wallet, monitorService.getCoinUrl(request.getHeader("coin"))));
     }
 
     @RequestMapping(value = "/minerCurrentStats", method = RequestMethod.GET)
     @ResponseBody
-    public String minerCurrentStats(String wallet){
-        return JSON.toJSONString(monitorService.getMinerCurrentStats(wallet));
+    public String minerCurrentStats(String wallet, HttpServletRequest request){
+        return JSON.toJSONString(monitorService.getMinerCurrentStats(wallet, monitorService.getCoinUrl(request.getHeader("coin"))));
     }
 
 //    @RequestMapping(value = "/minerWorkers", method = RequestMethod.GET)

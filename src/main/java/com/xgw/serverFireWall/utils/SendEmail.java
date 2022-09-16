@@ -1,5 +1,7 @@
 package com.xgw.serverFireWall.utils;
 
+import com.sun.mail.util.MailSSLSocketFactory;
+
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -13,18 +15,17 @@ public class SendEmail {
         //创建一个配置文件并保存
         Properties properties = new Properties();
 
-        properties.setProperty("mail.host",server);
+        properties.setProperty("mail.smtp.host",server);
 
         properties.setProperty("mail.transport.protocol","smtp");
 
         properties.setProperty("mail.smtp.auth","true");
 
-
         //QQ存在一个特性设置SSL加密
-//        MailSSLSocketFactory sf = new MailSSLSocketFactory();
-//        sf.setTrustAllHosts(true);
-//        properties.put("mail.smtp.ssl.enable", "true");
-//        properties.put("mail.smtp.ssl.socketFactory", sf);
+        MailSSLSocketFactory sf = new MailSSLSocketFactory();
+        sf.setTrustAllHosts(true);
+        properties.put("mail.smtp.ssl.enable", "true");
+        properties.put("mail.smtp.ssl.socketFactory", sf);
 
         //创建一个session对象
         Session session = Session.getDefaultInstance(properties, new Authenticator() {

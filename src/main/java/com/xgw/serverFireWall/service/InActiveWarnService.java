@@ -11,7 +11,7 @@ public interface InActiveWarnService {
      * @param wallet 钱包
      * @return
      */
-    Boolean openInActiveWarn(String openid, String wallet);
+//    Boolean openInActiveWarn(String openid, String wallet);
 
     /**
      * 更新钱包
@@ -19,7 +19,7 @@ public interface InActiveWarnService {
      * @param wallet 钱包
      * @return
      */
-    Boolean updateWallet(String openid, String wallet, String email, Integer threshold);
+    Boolean updateWallet(String openid, String wallet, String email, Integer threshold, String coin);
 
     /**
      * 获取用户历史收益
@@ -27,10 +27,11 @@ public interface InActiveWarnService {
      * @param wallet
      * @return
      */
-    List<Profit> getProfits(String openid, String wallet, Integer pageIndex, Integer pageSize);
+    List<Profit> getProfits(String openid, String wallet, Integer pageIndex, Integer pageSize, String coin);
 
-    List<Profit> getProfitsByDate(String openid, String wallet, String startDate, String endDate);
+    List<Profit> getProfitsByDate(String openid, String wallet, String startDate, String endDate, String coin);
 
+    //不用
     void inActiveTaskExecute();
 
     void profitTaskExecute();

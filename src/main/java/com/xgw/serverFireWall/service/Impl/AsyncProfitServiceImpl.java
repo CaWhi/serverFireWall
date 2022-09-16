@@ -2,6 +2,7 @@ package com.xgw.serverFireWall.service.Impl;
 
 import com.xgw.serverFireWall.Vo.ethermine.CurrentStatistics;
 import com.xgw.serverFireWall.Vo.ethermine.Payout;
+import com.xgw.serverFireWall.constant.CoinConstants;
 import com.xgw.serverFireWall.dao.Profit;
 import com.xgw.serverFireWall.dao.Subscribe;
 import com.xgw.serverFireWall.dao.mapper.ProfitMapper;
@@ -64,7 +65,7 @@ public class AsyncProfitServiceImpl implements AsyncProfitService {
                         openidSet.add(subscribe.getOpenid());
                         walletSet.add(StringUtils.lowerCase(subscribe.getWallet()));
                     }
-                    List<Profit> lastProfits = profitMapper.getLastProfit(new ArrayList<>(openidSet), new ArrayList<>(walletSet));
+                    List<Profit> lastProfits = profitMapper.getLastProfit(new ArrayList<>(openidSet), new ArrayList<>(walletSet), "");
                     Map<String, Profit> openidWalletProfit = new HashMap<>();
                     for(Profit profit : lastProfits){
                         openidWalletProfit.put(profit.getOpenid()+profit.getWallet(), profit);
@@ -81,7 +82,7 @@ public class AsyncProfitServiceImpl implements AsyncProfitService {
                             }
 
                             Calendar now = Calendar.getInstance();
-                            CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet);
+                            CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet,"");
                             if(currentStatistics == null){
                                 currentStatistics = new CurrentStatistics();
                                 currentStatistics.setUnpaid(new BigInteger("0"));
@@ -91,7 +92,7 @@ public class AsyncProfitServiceImpl implements AsyncProfitService {
                             if(currentStatistics.getUnpaid() == null){
                                 currentStatistics.setUnpaid(new BigInteger("0"));
                             }
-                            Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid());
+                            Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid(), CoinConstants.ETH);
                             Double reportHashRate = Double.valueOf(currentStatistics.getReportedHashrate()) / 1000000;
                             Double averageHashrate = Double.valueOf(currentStatistics.getAverageHashrate()) / 1000000;
 
@@ -111,7 +112,7 @@ public class AsyncProfitServiceImpl implements AsyncProfitService {
                                 BigInteger lastPaid = getLastPaid(wallet, profitDate);
                                 //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
                                 //todo 可能存在精度问题
-                                Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
+                                Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid()), CoinConstants.ETH) - lastUnpaid;
                                 if(lastDayProfit < 0){
                                     lastDayProfit = 0d;
                                 }
@@ -134,7 +135,7 @@ public class AsyncProfitServiceImpl implements AsyncProfitService {
                         }
                     }
 
-                    profitMapper.batchInsert(profitList);
+                    profitMapper.batchInsert(profitList, "");
 //                    System.out.println(JSON.toJSONString(profitList));
                 }
                 catch (Exception e){
@@ -154,7 +155,7 @@ public class AsyncProfitServiceImpl implements AsyncProfitService {
      * @return
      */
     private BigInteger getLastPaid(String wallet, String profitDate){
-        List<Payout> payouts = monitorService.getMinerPayouts(wallet);
+        List<Payout> payouts = monitorService.getMinerPayouts(wallet,"");
 
         if(CollectionUtils.isEmpty(payouts)){
             return new BigInteger("0");

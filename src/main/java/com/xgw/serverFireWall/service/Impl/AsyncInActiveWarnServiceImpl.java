@@ -90,7 +90,7 @@ public class AsyncInActiveWarnServiceImpl implements AsyncInActiveWarnService {
                             }
 
                             //获取矿工状态
-                            List<Worker> workers = monitorService.getWorkers(wallet);
+                            List<Worker> workers = monitorService.getWorkers(wallet,"");
                             if(CollectionUtils.isEmpty(workers)){
                                 continue;
                             }

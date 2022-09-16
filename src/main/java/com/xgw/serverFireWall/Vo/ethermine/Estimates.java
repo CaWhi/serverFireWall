@@ -17,6 +17,8 @@ public class Estimates implements Serializable {
 
     private BigDecimal gasPrice;
 
+    private Long ttttd;
+
     public String getTime() {
         return time;
     }
@@ -55,5 +57,13 @@ public class Estimates implements Serializable {
 
     public void setGasPrice(BigDecimal gasPrice) {
         this.gasPrice = gasPrice;
+    }
+
+    public Long getTtttd() {
+        return ttttd;
+    }
+
+    public void setTtttd(Long ttttd) {
+        this.ttttd = ttttd;
     }
 }

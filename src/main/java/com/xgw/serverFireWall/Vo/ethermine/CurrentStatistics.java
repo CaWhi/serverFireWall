@@ -12,6 +12,8 @@ public class CurrentStatistics extends Statistic implements Serializable {
      */
     private BigInteger unpaid;
 
+    private BigInteger unconfirmed;
+
     /**
      * 	Estimated number of coins mined per minute
      * 	(based on your average hashrate as well as the average block time and difficulty of the network over the last 24 hours.)
@@ -60,5 +62,13 @@ public class CurrentStatistics extends Statistic implements Serializable {
 
     public void setBtcPerMin(BigDecimal btcPerMin) {
         this.btcPerMin = btcPerMin;
+    }
+
+    public BigInteger getUnconfirmed() {
+        return unconfirmed;
+    }
+
+    public void setUnconfirmed(BigInteger unconfirmed) {
+        this.unconfirmed = unconfirmed;
     }
 }

@@ -38,7 +38,7 @@
             SELECT
             *
             FROM
-            profits
+            ${coinTable}
             WHERE
             openid in (<foreach collection="openids" item="openid" separator=",">#{openid}</foreach >)
             OR wallet in (<foreach collection="wallets" item="wallet" separator=",">#{wallet}</foreach >)
@@ -53,15 +53,15 @@
 
     <select id="getUserLastProfit" resultMap="Profit">
         SELECT *
-        FROM profits
+        FROM ${coinTable}
         WHERE openid = #{openid} AND wallet = #{wallet}
         ORDER BY
                 profitTime DESC
         LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
-    <insert id="batchInsert" parameterType="java.util.List">
-        INSERT INTO profits(id, openid, wallet, currentUnpaid, reportHashRate, averageHashRate, lastDayProfit, profitTime, createTime, updateTime)
+    <insert id="batchInsert">
+        INSERT INTO ${coinTable}(id, openid, wallet, currentUnpaid, reportHashRate, averageHashRate, lastDayProfit, profitTime, createTime, updateTime)
         VALUES
         <foreach collection ="profits" item="profit" separator =",">
             (#{profit.id}, #{profit.openid}, #{profit.wallet}, #{profit.currentUnpaid}, #{profit.reportHashRate}, #{profit.averageHashRate}, #{profit.lastDayProfit}, #{profit.profitTime}, #{profit.createTime}, #{profit.updateTime})
@@ -70,7 +70,7 @@
 
     <select id="getUserProfitByDate" resultMap="Profit">
         SELECT *
-        FROM profits
+        FROM ${coinTable}
         WHERE openid = #{openid} AND wallet = #{wallet} AND profitTime &gt;= #{start} AND profitTime  &lt;= #{end}
     </select>
 

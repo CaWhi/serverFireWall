@@ -9,6 +9,8 @@ public class Subscribe {
 
     private String wallet;
 
+    private String coin;
+
     private String email;
 
     private Integer threshold;
@@ -36,6 +38,14 @@ public class Subscribe {
 
     public void setWallet(String wallet) {
         this.wallet = wallet;
+    }
+
+    public String getCoin() {
+        return coin;
+    }
+
+    public void setCoin(String coin) {
+        this.coin = coin;
     }
 
     public Date getExpireTime() {

@@ -2,6 +2,7 @@ package com.xgw.serverFireWall;
 
 import com.xgw.serverFireWall.Vo.ethermine.Payout;
 import com.xgw.serverFireWall.dao.Profit;
+import com.xgw.serverFireWall.dao.mapper.ProfitMapper;
 import com.xgw.serverFireWall.service.InActiveWarnService;
 import com.xgw.serverFireWall.service.MonitorService;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,9 @@ class ServerFireWallApplicationTests {
 
 	@Resource
 	InActiveWarnService inActiveWarnService;
+
+	@Resource
+	ProfitMapper profitMapper;
 
 	@Test
 //	@Ignore
@@ -75,10 +79,23 @@ class ServerFireWallApplicationTests {
 //		catch (Exception e){
 //
 //		}
+//		List<String> ids = new ArrayList<>();
+//		ids.add("oQyaC5K8-2w1DCY20BsVzmKW95GI");
+//		List<String> wallet = new ArrayList<>();
+//		wallet.add(StringUtils.lowerCase("0xa2C4c39C7e17900e48613a0292A882468773a6e0"));
+//		System.out.println(JSON.toJSONString(profitMapper.getLastProfit(ids,wallet,"profits")));
+//		Profit profit = new Profit();
+//		profit.setOpenid("oQyaC5K8-2w1DCY20BsVzmKW95GI");
+//		List<Profit> profitList = new ArrayList<>();
+//		profitList.add(profit);
+//		profitMapper.batchInsert(profitList, "profitsETC");
+//		inActiveWarnService.profitTaskExecute();
+//		monitorService.getPoolStats("");
+//		HttpClientUtil.get("https://api.ethermine.org/miner/0xa2c4c39c7e17900e48613a0292a882468773a6e0/dashboard","200", true, "status", "data");
 	}
 
 	private BigInteger getLastPaid(String wallet, Profit profit, Date now){
-		List<Payout> payouts = monitorService.getMinerPayouts(wallet);
+		List<Payout> payouts = monitorService.getMinerPayouts(wallet,"");
 
 		if(CollectionUtils.isEmpty(payouts)){
 			return new BigInteger("0");

@@ -5,6 +5,7 @@ import com.xgw.serverFireWall.Vo.ethermine.CurrentStatistics;
 import com.xgw.serverFireWall.Vo.ethermine.Payout;
 import com.xgw.serverFireWall.Vo.ethermine.Worker;
 import com.xgw.serverFireWall.Vo.inactive.WaveWorker;
+import com.xgw.serverFireWall.constant.CoinConstants;
 import com.xgw.serverFireWall.constant.Constants;
 import com.xgw.serverFireWall.dao.Profit;
 import com.xgw.serverFireWall.dao.Subscribe;
@@ -68,47 +69,47 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
 //    @Resource
 //    private AsyncInActiveWarnService asyncInActiveWarnService;
 
-    @Override
-    public Boolean openInActiveWarn(String openid, String wallet) {
-        try{
-//            String openid = getOpenID(loginCode);
-//            if(StringUtils.isBlank(openid) || StringUtils.isBlank(wallet)){
-//                return false;
+//    @Override
+//    public Boolean openInActiveWarn(String openid, String wallet) {
+//        try{
+////            String openid = getOpenID(loginCode);
+////            if(StringUtils.isBlank(openid) || StringUtils.isBlank(wallet)){
+////                return false;
+////            }
+//
+//            Subscribe subscribe = subscribeMapper.getByOpenId(openid);
+//
+//            Calendar calendar = Calendar.getInstance();
+//            if(subscribe != null){
+//                subscribe.setUpdateTime(calendar.getTime());
+//                subscribe.setWallet(wallet);
+//
+//                calendar.set(2099, 11, 30, 0, 0, 0);
+//                subscribe.setExpireTime(calendar.getTime());
+//
+//                subscribeMapper.update(subscribe);
+//            } else {
+//                subscribe = new Subscribe();
+//                subscribe.setOpenid(openid);
+//                subscribe.setWallet(wallet);
+//                subscribe.setCreateTime(calendar.getTime());
+//
+//                calendar.set(2099, 11, 30, 0, 0, 0);
+//                subscribe.setExpireTime(calendar.getTime());
+//
+//                subscribeMapper.insert(subscribe);
 //            }
-
-            Subscribe subscribe = subscribeMapper.getByOpenId(openid);
-
-            Calendar calendar = Calendar.getInstance();
-            if(subscribe != null){
-                subscribe.setUpdateTime(calendar.getTime());
-                subscribe.setWallet(wallet);
-
-                calendar.set(2099, 11, 30, 0, 0, 0);
-                subscribe.setExpireTime(calendar.getTime());
-
-                subscribeMapper.update(subscribe);
-            } else {
-                subscribe = new Subscribe();
-                subscribe.setOpenid(openid);
-                subscribe.setWallet(wallet);
-                subscribe.setCreateTime(calendar.getTime());
-
-                calendar.set(2099, 11, 30, 0, 0, 0);
-                subscribe.setExpireTime(calendar.getTime());
-
-                subscribeMapper.insert(subscribe);
-            }
-
-            return true;
-        }
-        catch (Exception e){
-            logger.error("开启掉线提醒失败，wallet:{}", wallet, e);
-            return false;
-        }
-    }
+//
+//            return true;
+//        }
+//        catch (Exception e){
+//            logger.error("开启掉线提醒失败，wallet:{}", wallet, e);
+//            return false;
+//        }
+//    }
 
     @Override
-    public Boolean updateWallet(String openid, String wallet, String email, Integer threshold) {
+    public Boolean updateWallet(String openid, String wallet, String email, Integer threshold, String coin) {
         try{
 //            String openid = getOpenID(loginCode);
 //            if(StringUtils.isBlank(openid) || StringUtils.isBlank(wallet)){
@@ -118,7 +119,11 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                 return false;
             }
 
-            Subscribe subscribe = subscribeMapper.getByOpenId(openid);
+            if(StringUtils.isBlank(coin)){
+                coin = CoinConstants.ETH;
+            }
+
+            Subscribe subscribe = subscribeMapper.getByOpenId(openid, coin);
 
             Calendar calendar = Calendar.getInstance();
             if(subscribe != null){
@@ -141,7 +146,16 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                 subscribe = new Subscribe();
                 subscribe.setOpenid(openid);
                 subscribe.setWallet(wallet);
+                subscribe.setCoin(coin);
                 subscribe.setCreateTime(calendar.getTime());
+
+                if(StringUtils.isNotBlank(email)){
+                    subscribe.setEmail(email);
+                }
+                //开启波动提醒
+                if(threshold != null && threshold > 0 && threshold <= 100){
+                    subscribe.setThreshold(threshold);
+                }
 
                 subscribeMapper.insert(subscribe);
             }
@@ -155,12 +169,15 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
     }
 
     @Override
-    public List<Profit> getProfits(String openid, String wallet, Integer pageIndex, Integer pageSize) {
+    public List<Profit> getProfits(String openid, String wallet, Integer pageIndex, Integer pageSize, String coin) {
         try{
 //            String openid = getOpenID(loginCode);
 //            if(StringUtils.isBlank(openid) || StringUtils.isBlank(wallet)){
 //                return new ArrayList<>();
 //            }
+            if(StringUtils.isBlank(coin)){
+                coin = CoinConstants.ETH;
+            }
 
             if(pageIndex == null || pageIndex < 0){
                 pageIndex = 0;
@@ -169,7 +186,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                 pageSize = 25;
             }
 
-            return profitMapper.getUserLastProfit(openid, StringUtils.lowerCase(wallet), pageIndex*pageSize, pageSize);
+            return profitMapper.getUserLastProfit(openid, StringUtils.lowerCase(wallet), pageIndex*pageSize, pageSize, CommonUtils.getProfitTable(coin));
         }
         catch (Exception e){
             logger.error("获取历史收益失败，wallet:{}", wallet, e);
@@ -189,109 +206,136 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
         try{
             Calendar recent = Calendar.getInstance();
             recent.add(Calendar.DATE, -7);
-            //获取7天内活跃账号
-            List<Subscribe> allSubscribe = subscribeMapper.getRecent(recent.getTime());
-            if(CollectionUtils.isEmpty(allSubscribe)){
-                logger.info("{},没有账户需要计算收益", LocalDateTime.now());
-                return;
-            }
 
-            // 分页
-            List<List<Subscribe>> subscribePages = CommonUtils.pageList(allSubscribe, 50);
+            for(String coin : CoinConstants.getAllCoins()){
+                //获取7天内活跃账号
+                List<Subscribe> allSubscribe = subscribeMapper.getRecent(recent.getTime(), coin);
+                if(CollectionUtils.isEmpty(allSubscribe)){
+                    logger.info("{},没有账户需要计算收益", LocalDateTime.now());
+                    return;
+                }
 
-            // 收益日期
-            Calendar last = Calendar.getInstance();
-            last.add(Calendar.DATE, -1);
-            String profitDate = sdf.format(last.getTime());
+                String url = monitorService.getCoinUrl(coin);
+//                url = "https://api.ethermine.org";
 
-            // 分批计算收益
-            for(List<Subscribe> subscribes : subscribePages){
-                try{
-                    //获取最新的收益记录
-                    Set<String> openidSet = new HashSet<>();
-                    Set<String> walletSet = new HashSet<>();
-                    for(Subscribe subscribe : subscribes){
-                        if(StringUtils.isBlank(subscribe.getWallet())){
-                            continue;
-                        }
+                // 分页
+                List<List<Subscribe>> subscribePages = CommonUtils.pageList(allSubscribe, 50);
 
-                        openidSet.add(subscribe.getOpenid());
-                        walletSet.add(StringUtils.lowerCase(subscribe.getWallet()));
-                    }
-                    List<Profit> lastProfits = profitMapper.getLastProfit(new ArrayList<>(openidSet), new ArrayList<>(walletSet));
-                    Map<String, Profit> openidWalletProfit = new HashMap<>();
-                    for(Profit profit : lastProfits){
-                        openidWalletProfit.put(profit.getOpenid()+profit.getWallet(), profit);
-                    }
+                // 收益日期
+                Calendar last = Calendar.getInstance();
+                last.add(Calendar.DATE, -1);
+                String profitDate = sdf.format(last.getTime());
+                last.setTime(sdf.parse(profitDate));
 
-                    List<Profit> profitList = new ArrayList<>();
-                    //遍历计算昨天收益
-                    for(Subscribe subscribe : subscribes){
-                        String openid = subscribe.getOpenid();
-                        String wallet = subscribe.getWallet();
-                        try{
+                // 分批计算收益
+                for(List<Subscribe> subscribes : subscribePages){
+                    try{
+                        //获取最新的收益记录
+                        Set<String> openidSet = new HashSet<>();
+                        Set<String> walletSet = new HashSet<>();
+                        for(Subscribe subscribe : subscribes){
                             if(StringUtils.isBlank(subscribe.getWallet())){
                                 continue;
                             }
 
-                            Calendar now = Calendar.getInstance();
-                            CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet);
-                            if(currentStatistics == null){
-                                currentStatistics = new CurrentStatistics();
-                                currentStatistics.setUnpaid(new BigInteger("0"));
-                                currentStatistics.setReportedHashrate(0l);
-                                currentStatistics.setAverageHashrate(0l);
-                            }
-                            if(currentStatistics.getUnpaid() == null){
-                                currentStatistics.setUnpaid(new BigInteger("0"));
-                            }
-                            Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid());
-                            Double reportHashRate = Double.valueOf(currentStatistics.getReportedHashrate()) / 1000000;
-                            Double averageHashrate = Double.valueOf(currentStatistics.getAverageHashrate()) / 1000000;
+                            openidSet.add(subscribe.getOpenid());
+                            walletSet.add(StringUtils.lowerCase(subscribe.getWallet()));
+                        }
+                        List<Profit> lastProfits = profitMapper.getLastProfit(new ArrayList<>(openidSet), new ArrayList<>(walletSet), CommonUtils.getProfitTable(coin));
+                        Map<String, Profit> openidWalletProfit = new HashMap<>();
+                        for(Profit profit : lastProfits){
+                            openidWalletProfit.put(profit.getOpenid()+profit.getWallet(), profit);
+                        }
 
-                            Double lastUnpaid = getLastUnpaid(openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), profitDate);
-                            Profit profit = new Profit();
-                            //之前没有收益记录，第一天不计算收益
-                            if(lastUnpaid == null){
-                                profit.setOpenid(openid);
-                                profit.setWallet(StringUtils.lowerCase(wallet));
-                                profit.setCurrentUnpaid(currentUnpaid);
-                                profit.setReportHashRate(reportHashRate);
-                                profit.setAverageHashRate(averageHashrate);
-                                profit.setProfitTime(last.getTime());
-                                profit.setCreateTime(now.getTime());
-                            } else {
-                                //计算昨天收益
-                                BigInteger lastPaid = getLastPaid(wallet, openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), now.getTime());
-                                //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
-                                //todo 可能存在精度问题
-                                Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid())) - lastUnpaid;
-                                if(lastDayProfit < 0){
-                                    lastDayProfit = 0d;
+                        List<Profit> profitList = new ArrayList<>();
+                        //遍历计算昨天收益
+                        for(Subscribe subscribe : subscribes){
+                            String openid = subscribe.getOpenid();
+                            String wallet = subscribe.getWallet();
+                            try{
+                                if(StringUtils.isBlank(subscribe.getWallet())){
+                                    continue;
                                 }
 
-                                profit.setOpenid(openid);
-                                profit.setWallet(StringUtils.lowerCase(wallet));
-                                profit.setCurrentUnpaid(currentUnpaid);
-                                profit.setReportHashRate(reportHashRate);
-                                profit.setAverageHashRate(averageHashrate);
-                                profit.setLastDayProfit(lastDayProfit);
-                                profit.setProfitTime(last.getTime());
-                                profit.setCreateTime(now.getTime());
-                            }
-                            profitList.add(profit);
-                            logger.info("计算余额，openid:{},wallet:{},currentUnpaid:{},lastDayProfit:{}", openid, wallet, currentUnpaid, profit.getLastDayProfit());
-                            Thread.sleep(1000);
-                        }
-                        catch (Exception e){
-                            logger.error("每日收益单个计算失败,openid:{},wallet:{}", openid, wallet, e);
-                        }
-                    }
+                                Calendar now = Calendar.getInstance();
+                                CurrentStatistics currentStatistics = monitorService.getMinerCurrentStats(wallet, url);
 
-                    profitMapper.batchInsert(profitList);
-                }
-                catch (Exception e){
-                    logger.error("每日收益分批计算失败", e);
+//                                if(currentStatistics == null){
+//                                    for(int i=0;i<5;i++){
+//                                        currentStatistics = monitorService.getMinerCurrentStats(wallet, url);
+//                                        if(currentStatistics!=null){
+//                                            break;
+//                                        }
+//                                    }
+//                                }
+
+                                if(currentStatistics == null){
+                                    currentStatistics = new CurrentStatistics();
+                                    currentStatistics.setUnpaid(new BigInteger("0"));
+                                    currentStatistics.setUnconfirmed(new BigInteger("0"));
+                                    currentStatistics.setReportedHashrate(0l);
+                                    currentStatistics.setAverageHashrate(0l);
+                                }
+                                if(currentStatistics.getUnpaid() == null){
+                                    currentStatistics.setUnpaid(new BigInteger("0"));
+                                }
+                                if(currentStatistics.getUnconfirmed() == null){
+                                    currentStatistics.setUnconfirmed(new BigInteger("0"));
+                                }
+
+                                //etc rvn ergo还有未确认余额
+                                if(!coin.equals(CoinConstants.ETH)){
+                                    currentStatistics.setUnpaid(currentStatistics.getUnpaid().add(currentStatistics.getUnconfirmed()));
+                                }
+
+                                Double currentUnpaid = CommonUtils.dealCoinAmount(currentStatistics.getUnpaid(), coin);
+                                Double reportHashRate = Double.valueOf(currentStatistics.getReportedHashrate()) / 1000000;
+                                Double averageHashrate = Double.valueOf(currentStatistics.getAverageHashrate()) / 1000000;
+
+                                Double lastUnpaid = getLastUnpaid(openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), profitDate);
+                                Profit profit = new Profit();
+                                //之前没有收益记录，第一天不计算收益
+                                if(lastUnpaid == null){
+                                    profit.setOpenid(openid);
+                                    profit.setWallet(StringUtils.lowerCase(wallet));
+                                    profit.setCurrentUnpaid(currentUnpaid);
+                                    profit.setReportHashRate(reportHashRate);
+                                    profit.setAverageHashRate(averageHashrate);
+                                    profit.setProfitTime(last.getTime());
+                                    profit.setCreateTime(now.getTime());
+                                } else {
+                                    //计算昨天收益
+                                    BigInteger lastPaid = getLastPaid(wallet, openidWalletProfit.get(openid+StringUtils.lowerCase(wallet)), now.getTime(), url);
+                                    //昨日收益 = 昨日支付总额 + 当前未支付余额 - 昨天未支付余额
+                                    //todo 可能存在精度问题
+                                    Double lastDayProfit = CommonUtils.dealCoinAmount(lastPaid.add(currentStatistics.getUnpaid()), coin) - lastUnpaid;
+                                    if(lastDayProfit < 0){
+                                        lastDayProfit = 0d;
+                                    }
+
+                                    profit.setOpenid(openid);
+                                    profit.setWallet(StringUtils.lowerCase(wallet));
+                                    profit.setCurrentUnpaid(currentUnpaid);
+                                    profit.setReportHashRate(reportHashRate);
+                                    profit.setAverageHashRate(averageHashrate);
+                                    profit.setLastDayProfit(lastDayProfit);
+                                    profit.setProfitTime(last.getTime());
+                                    profit.setCreateTime(now.getTime());
+                                }
+                                profitList.add(profit);
+                                logger.info("计算余额，openid:{},wallet:{},currentUnpaid:{},lastDayProfit:{}", openid, wallet, currentUnpaid, profit.getLastDayProfit());
+                                Thread.sleep(3000);
+                            }
+                            catch (Exception e){
+                                logger.error("每日收益单个计算失败,openid:{},wallet:{}", openid, wallet, e);
+                            }
+                        }
+
+                        profitMapper.batchInsert(profitList, CommonUtils.getProfitTable(coin));
+                    }
+                    catch (Exception e){
+                        logger.error("每日收益分批计算失败", e);
+                    }
                 }
             }
         }
@@ -306,8 +350,17 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
      * @param profit
      * @return
      */
-    private BigInteger getLastPaid(String wallet, Profit profit, Date now){
-        List<Payout> payouts = monitorService.getMinerPayouts(wallet);
+    private BigInteger getLastPaid(String wallet, Profit profit, Date now, String url){
+        List<Payout> payouts = monitorService.getMinerPayouts(wallet, url);
+
+//        if(payouts == null){
+//            for (int i=0;i<5;i++){
+//                payouts = monitorService.getMinerPayouts(wallet, url);
+//                if(payouts != null){
+//                    break;
+//                }
+//            }
+//        }
 
         if(CollectionUtils.isEmpty(payouts)){
             return new BigInteger("0");
@@ -376,7 +429,7 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
                             }
 
                             //获取矿工状态
-                            List<Worker> workers = monitorService.getWorkers(wallet);
+                            List<Worker> workers = monitorService.getWorkers(wallet, "");
                             if(CollectionUtils.isEmpty(workers)){
                                 continue;
                             }
@@ -695,15 +748,20 @@ public class InActiveWarnServiceImpl implements InActiveWarnService {
     }
 
     @Override
-    public List<Profit> getProfitsByDate(String openid, String wallet, String startDate, String endDate) {
+    public List<Profit> getProfitsByDate(String openid, String wallet, String startDate, String endDate, String coin) {
         try{
             if(StringUtils.isBlank(wallet) || StringUtils.isBlank(startDate) || StringUtils.isBlank(endDate)){
                 return null;
             }
+
+            if(StringUtils.isBlank(coin)){
+                coin = CoinConstants.ETH;
+            }
+
             Date start = sdf.parse(startDate);
             Date end = sdf.parse(endDate);
 
-            List<Profit> profits = profitMapper.getUserProfitByDate(openid, StringUtils.lowerCase(wallet), start, end);
+            List<Profit> profits = profitMapper.getUserProfitByDate(openid, StringUtils.lowerCase(wallet), start, end, CommonUtils.getProfitTable(coin));
             Map<String, Profit> profitMap = new HashMap<>();
             for(Profit profit : profits){
                 profitMap.put(sdf.format(profit.getProfitTime()), profit);
